@@ -1,0 +1,17 @@
+{
+  "name": "학습 코치",
+  "short_name": "학습 코치",
+  "description": "성적표를 바탕으로 학습 변화를 보고 보강 계획을 세우는 앱",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "lang": "ko",
+  "background_color": "#F3F6FA",
+  "theme_color": "#FFE15A",
+  "icons": [
+    {"src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png"},
+    {"src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png"},
+    {"src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
+  ]
+}

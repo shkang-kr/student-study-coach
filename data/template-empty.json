@@ -1,0 +1,75 @@
+{
+  "format": "school-coach-data",
+  "schemaVersion": 3,
+  "meta": {
+    "dataset": "template-empty",
+    "synthetic": true,
+    "createdAt": "2026-11-08"
+  },
+  "school": {
+    "alias": "A학교"
+  },
+  "student": {
+    "pid": "S001",
+    "alias": "학생 A",
+    "grade": 3
+  },
+  "exams": [
+    {
+      "id": "t1",
+      "label": "시험1",
+      "kind": "midterm"
+    },
+    {
+      "id": "t2",
+      "label": "시험2",
+      "kind": "final"
+    }
+  ],
+  "subjects": [
+    {
+      "id": "kor",
+      "name": "국어",
+      "type": "lang"
+    },
+    {
+      "id": "math",
+      "name": "수학",
+      "type": "math"
+    }
+  ],
+  "results": [
+    {
+      "exam": "t1",
+      "subject": "kor",
+      "objective": 0,
+      "written": 0
+    },
+    {
+      "exam": "t1",
+      "subject": "math",
+      "objective": 0,
+      "written": 0
+    },
+    {
+      "exam": "t2",
+      "subject": "kor",
+      "objective": 0,
+      "written": 0
+    },
+    {
+      "exam": "t2",
+      "subject": "math",
+      "objective": 0,
+      "written": 0
+    }
+  ],
+  "profile": {
+    "traits": [
+      {
+        "label": "학습 유형",
+        "value": "(입력)"
+      }
+    ]
+  }
+}

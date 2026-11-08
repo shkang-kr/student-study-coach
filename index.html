@@ -1,0 +1,1448 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-gvIh1Onc5YA90H0fC531W+dO8Ug51GpCzeRk83dzuh8='; style-src 'unsafe-inline'; img-src 'self' blob: data:; manifest-src 'self'; worker-src 'self'; connect-src 'self'; form-action 'none'; base-uri 'none'; frame-src 'none'">
+<meta name="theme-color" content="#FFE15A">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="학습 코치">
+<meta name="referrer" content="no-referrer">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<title>학습 코치</title>
+<style>
+:root{
+  --paper:#F3F6FA; --sheet:#FFFFFF; --grid:#DFE6F0;
+  --ink:#1C2230; --blue:#1B3FA0; --blue-soft:#E4EBFA;
+  --red:#D3263F; --red-soft:#FDE8EB; --hl:#FFE15A; --mute:#5B6475; --ok:#1E8A5A; --ok-soft:#E5F5EC;
+  --serif:"AppleMyungjo","Noto Serif KR","Nanum Myeongjo",Batang,serif;
+  --sans:"Apple SD Gothic Neo","Noto Sans KR","Malgun Gothic",system-ui,sans-serif;
+}
+*{box-sizing:border-box;margin:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{font-family:var(--sans);color:var(--ink);background:var(--paper);
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:24px 24px;line-height:1.55;overscroll-behavior:none}
+button{font:inherit;color:inherit;cursor:pointer;background:none;border:0;touch-action:manipulation}
+input,select,textarea{font:inherit;font-size:16px}
+:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+.stage{display:flex;gap:32px;justify-content:center;align-items:flex-start;height:100%}
+.app{width:100%;max-width:480px;height:100vh;height:100dvh;background:var(--sheet);display:flex;flex-direction:column;overflow:hidden}
+.top{padding:calc(8px + env(safe-area-inset-top)) 14px 10px;border-bottom:2px solid var(--ink);background:var(--hl);display:flex;flex-direction:column;gap:8px}
+.top .r1{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.top b{font-family:var(--serif);font-size:16px}
+.gear{min-height:36px;padding:0 12px;border:2px solid var(--ink);border-radius:99px;font-size:13px;font-weight:700;background:#fff}
+.gear[aria-pressed=true]{background:var(--ink);color:#fff}
+.role{display:grid;grid-template-columns:repeat(3,1fr);border:2px solid var(--ink);border-radius:99px;overflow:hidden;background:#fff}
+.role button{min-height:40px;font-size:14px;font-weight:700}
+.role button[aria-pressed=true]{background:var(--ink);color:#fff}
+.view{flex:1;padding:16px 16px 28px;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.tabs{display:flex;border-top:2px solid var(--ink);background:#fff;padding-bottom:env(safe-area-inset-bottom)}
+.tabs button{flex:1;min-height:52px;font-weight:700;font-size:12.5px;color:var(--mute)}
+.tabs button[aria-selected=true]{color:var(--blue);box-shadow:inset 0 3px 0 var(--blue)}
+h1{font-family:var(--serif);font-size:23px;line-height:1.3;margin-bottom:4px}
+h2{font-family:var(--serif);font-size:17px;margin:22px 0 8px}
+.sub{color:var(--mute);font-size:13px}
+.slip{border:2px solid var(--ink);border-radius:6px;margin-top:14px}
+.slip .row{display:grid;grid-template-columns:44px 1fr 44px 32px;gap:6px;align-items:center;min-height:46px;padding:6px 12px;border-bottom:1px dashed var(--grid);width:100%;text-align:left}
+.slip .row:last-child{border-bottom:0}
+.slip .nm{font-family:var(--serif);font-weight:700}
+.slip .sc{font-weight:800;color:var(--blue);font-size:19px;text-align:right}
+.lv{width:26px;height:26px;border:2px solid var(--blue);border-radius:50%;display:grid;place-items:center;font-weight:800;color:var(--blue);font-size:12px}
+.lv.low{border-color:var(--red);color:var(--red)}
+.up{color:var(--ok);font-weight:700}.down{color:var(--red);font-weight:700}
+.pen{margin-top:14px;padding:12px 14px 12px 16px;background:var(--red-soft);border-left:4px solid var(--red);border-radius:0 8px 8px 0;color:#7A1020;font-size:14.5px;overflow-wrap:anywhere}
+.pen b{color:var(--red);font-family:var(--serif)}
+.pen mark{background:none;color:inherit;text-decoration:underline wavy var(--red);text-underline-offset:4px}
+.pen.good{background:var(--ok-soft);border-color:var(--ok);color:#0F4D31}.pen.good b{color:var(--ok)}
+.pen.blue{background:var(--blue-soft);border-color:var(--blue);color:#13296B}.pen.blue b{color:var(--blue)}
+.pen.good mark,.pen.blue mark{text-decoration-color:currentColor}
+.tag{display:inline-block;font-size:12px;padding:1px 8px;border-radius:99px;border:1.5px solid var(--ink);margin:0 4px 4px 0;background:#fff}
+.task{display:flex;gap:12px;align-items:flex-start;width:100%;text-align:left;min-height:48px;padding:11px 12px;border:2px solid var(--ink);border-radius:10px;margin-bottom:8px;background:#fff}
+.task .box{flex:none;width:24px;height:24px;border:2px solid var(--ink);border-radius:6px;display:grid;place-items:center;font-weight:900;color:#fff;margin-top:2px}
+.task[aria-checked=true]{background:var(--blue-soft);border-color:var(--blue)}
+.task[aria-checked=true] .box{background:var(--blue);border-color:var(--blue)}
+.task[aria-checked=true] .t{text-decoration:line-through;text-decoration-color:var(--blue)}
+.task .t{font-weight:700}.task .d{font-size:13px;color:var(--mute)}
+.bar{height:12px;border:2px solid var(--ink);border-radius:99px;background:#fff;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--hl);border-right:2px solid var(--ink);transition:width .4s}
+.chips{display:flex;gap:6px;margin:10px 0;flex-wrap:wrap}
+.chips button{min-height:40px;padding:0 14px;border:2px solid var(--ink);border-radius:99px;font-weight:700;font-size:14px;background:#fff}
+.chips button[aria-pressed=true]{background:var(--blue);color:#fff;border-color:var(--blue)}
+.chips button.sub{border-style:dashed;font-weight:600}
+.chart{border:2px solid var(--ink);border-radius:8px;padding:8px;background:#fff}
+.scroll{overflow-x:auto}
+.legend{display:flex;gap:14px;font-size:12px;color:var(--mute);margin-top:4px;flex-wrap:wrap}
+.comp{display:grid;grid-template-columns:70px 1fr 54px;gap:6px 8px;align-items:center;font-size:13.5px;margin-top:8px}
+.stack{display:flex;height:14px;border:2px solid var(--ink);border-radius:99px;overflow:hidden;background:#fff}
+.stack i{display:block;height:100%}
+.card{border:2px solid var(--ink);border-radius:10px;padding:12px;margin-top:10px;background:#fff;position:relative;overflow-wrap:anywhere}
+.trait{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.trait div{border:2px solid var(--ink);border-radius:8px;padding:8px 10px;font-size:13px;background:#fff}
+.trait b{display:block;font-size:15px;font-family:var(--serif)}
+table{width:100%;border-collapse:collapse;font-size:13.5px;margin-top:8px}
+th{font-weight:700;text-align:left;font-size:12px;color:var(--mute);padding:4px;border-bottom:2px solid var(--ink)}
+td{padding:9px 4px;border-bottom:1px dashed var(--grid)}
+tr.pick{background:var(--hl)}
+tbody tr[data-pick]{cursor:pointer}
+.flag{font-size:12px;font-weight:700;padding:1px 8px;border-radius:99px;border:1.5px solid var(--red);color:var(--red);background:var(--red-soft);white-space:nowrap}
+.flag.ok{border-color:var(--ok);color:var(--ok);background:var(--ok-soft)}
+.flag.watch{border-color:#9A6B00;color:#7A5400;background:#FFF4CC}
+.goal{margin:10px 0;padding:10px 12px;border:2px solid var(--ink);border-radius:10px;background:#fff}
+.goal .h{display:flex;justify-content:space-between;font-weight:700}
+.goal input[type=range]{width:100%;accent-color:var(--blue);margin:8px 0 2px;min-height:32px}
+.tg{display:flex;justify-content:space-between;align-items:center;gap:12px;min-height:52px;padding:8px 0;border-bottom:1px dashed var(--grid);width:100%;text-align:left}
+.sw{width:46px;height:26px;border:2px solid var(--ink);border-radius:99px;position:relative;background:#fff;flex:none}
+.sw::after{content:"";position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:var(--ink);transition:left .2s}
+.tg[aria-checked=true] .sw{background:var(--hl)}
+.tg[aria-checked=true] .sw::after{left:22px}
+.q{margin:6px 0;padding:10px 12px;background:var(--hl);border-radius:8px;font-weight:700;font-size:14.5px}
+.draft{white-space:pre-wrap;font-size:14px;background:#fff;border:2px dashed var(--ink);border-radius:8px;padding:10px 12px;margin-top:8px}
+.btn{margin-top:8px;min-height:44px;padding:0 16px;border:2px solid var(--ink);border-radius:99px;font-weight:700;background:#fff;font-size:14px;display:inline-flex;align-items:center;justify-content:center}
+.btn.main{background:var(--hl)}
+.btn.small{min-height:36px;padding:0 12px;font-size:13px;margin-top:0}
+.btns{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}.btns .btn{margin-top:0}
+.in{width:100%;padding:8px 10px;border:2px solid var(--ink);border-radius:8px;background:#fff;margin-top:4px;min-height:44px}
+.fr{display:grid;grid-template-columns:54px 1fr 1fr;gap:6px;align-items:center;margin:6px 0;font-size:14px}
+.fr input{padding:6px 8px;border:2px solid var(--ink);border-radius:8px;width:100%;min-width:0;min-height:44px}
+.std{display:grid;grid-template-columns:1fr 90px 40px;gap:8px;align-items:center;margin:8px 0;font-size:14px}
+.qc{border:2px solid var(--ink);border-radius:10px;padding:12px;margin:10px 0;background:#fff}
+.qh{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.sel2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;font-size:13px}
+.sel2 label{display:block}
+.sel2 select,.er select,.wr select{width:100%;padding:6px;border:2px solid var(--ink);border-radius:8px;background:#fff;margin:2px 0;min-height:44px}
+.trace{font-size:13.5px;color:var(--mute);margin-top:8px}
+.day{margin:14px 0 4px}
+.slot{border:2px solid var(--ink);border-radius:10px;padding:12px;margin:10px 0;background:#fff;position:relative}
+.vh{position:absolute;opacity:0;width:1px;height:1px;pointer-events:none}
+.vh:focus-visible + label{outline:3px solid var(--blue);outline-offset:2px}
+label.btn{cursor:pointer}
+.ths{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+.th{display:grid;grid-template-columns:48px 1fr auto;gap:8px;align-items:center;font-size:13px}
+.th img,.th .pdf{width:48px;height:48px;object-fit:cover;border:2px solid var(--ink);border-radius:6px;display:grid;place-items:center;font-weight:800;font-size:12px;background:#fff}
+.th .sub{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dt{border:2px solid var(--ink);border-radius:8px;padding:8px 10px;margin:8px 0;background:#fff}
+.dt summary{font-weight:700;cursor:pointer;min-height:36px;display:flex;align-items:center}
+.big{width:100%;display:block;margin-top:8px;border:1px solid var(--grid)}
+.er{display:grid;grid-template-columns:44px 1fr 1fr;gap:8px;align-items:center;margin:4px 0;font-size:14px}
+.er.head{font-size:12px;color:var(--mute);font-weight:700}
+.wr{display:grid;grid-template-columns:44px 1fr;gap:6px 8px;align-items:center;margin:10px 0;padding-bottom:10px;border-bottom:1px dashed var(--grid)}
+.wr .in,.wr select{grid-column:2;width:100%;margin:0}
+.rules{padding-left:18px;font-size:13.5px}.rules li{margin:4px 0}
+.fmt{font-size:12px;width:100%}.fmt td,.fmt th{padding:5px 4px;vertical-align:top;overflow-wrap:anywhere}
+.fmt code{font-family:ui-monospace,Menlo,monospace;font-size:11.5px;background:#EEF2F8;padding:0 3px;border-radius:3px}
+.errs{margin-top:8px;font-size:13px;overflow-wrap:anywhere}
+.errs li{margin:3px 0 3px 18px}
+.notes{display:none;width:350px;position:sticky;top:24px;background:#fff;border:2px solid var(--ink);border-radius:10px;padding:18px;box-shadow:6px 6px 0 var(--blue)}
+.notes h3{font-family:var(--serif);font-size:17px;margin-bottom:6px}
+.notes p{font-size:14px;margin-bottom:10px}
+.notes .k{font-size:12.5px;color:var(--mute)}
+.notes ul{padding-left:18px;font-size:13.5px;margin-bottom:8px}
+.notes hr{border:0;border-top:1px dashed var(--ink);margin:12px 0}
+
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px}
+.g2 label,.g3 label,.lb,.srow label{display:block;font-size:13px}
+.g2 input,.g3 input,.g3 select,.g2 select,.srow .g2 input,.srow .g3 input{width:100%;padding:6px 8px;border:2px solid var(--ink);border-radius:8px;min-height:44px;background:#fff;margin-top:2px}
+.srow{border:2px solid var(--ink);border-radius:10px;padding:12px;margin:10px 0;background:#fff}
+.srow label{margin-top:8px}
+.ev{display:grid;grid-template-columns:56px 1fr auto;gap:8px;align-items:center;padding:8px 0;border-bottom:1px dashed var(--grid);font-size:14px}
+.ev .dd{font-weight:800;color:var(--blue);font-size:14px}
+.evb{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.upd{background:var(--ink);color:#fff;padding:8px 14px;font-size:13px;display:flex;gap:10px;align-items:center;justify-content:space-between}
+.upd[hidden]{display:none}
+.upd .btn{color:var(--ink)}
+.ver{font-size:11px;color:var(--mute);margin-left:6px;font-weight:700}
+textarea.in{resize:vertical;font-size:14px}
+@media(min-width:900px){
+  body{overflow:auto}
+  .stage{height:auto;padding:24px 16px}
+  .app{height:min(860px,calc(100vh - 48px));border:2px solid var(--ink);border-radius:22px;box-shadow:6px 6px 0 var(--ink)}
+  .notes{display:block}
+}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="stage">
+  <main class="app" aria-label="학습 코치 앱">
+    <header class="top">
+      <div class="r1"><span><b id="ttl">학습 코치</b><span class="ver" id="ver"></span></span><button class="gear" data-role="D" aria-pressed="false">데이터</button></div>
+      <div class="role" role="group" aria-label="사용자 전환">
+        <button data-role="S" aria-pressed="true">학생</button><button data-role="P" aria-pressed="false">학부모</button><button data-role="T" aria-pressed="false">교사</button>
+      </div>
+    </header>
+    <div class="upd" id="upd" hidden><span>새 버전이 있어요. 저장하지 않은 데이터는 먼저 받아 두세요.</span><button class="btn small" data-reload="1">새로고침</button></div>
+    <div class="view" id="view" tabindex="-1"></div>
+    <nav class="tabs" id="tabs" role="tablist" aria-label="학생 메뉴"></nav>
+  </main>
+  <aside class="notes" id="notes" aria-live="polite"></aside>
+</div>
+
+<script>
+'use strict';
+/* =====================================================================
+   학습 코치 — 프로그램 파일
+   - 이 파일에는 학생·학교 데이터가 들어 있지 않아요.
+   - 데이터는 별도 JSON 파일로만 불러와요(형식은 아래 SCHEMA가 정의해요).
+   - 브라우저 저장소·쿠키를 쓰지 않고, 같은 위치의 파일만 읽어요(CSP로 외부 연결 차단).
+   ===================================================================== */
+const FORMAT='school-coach-data',VERSION=3,APP_VERSION='3.0.1';
+/* 데이터 형식(스키마) 변경 기록. 새 성적표에서 중요한 항목이 발견되면 여기에 버전을 추가하고 SCHEMA와 MIGRATIONS를 함께 고쳐요. */
+const SCHEMA_HISTORY=[
+ {v:1,app:'1.0.0',date:'2026-11-08',changes:['최초 형식: 시험·과목·점수(객관식/서술형), 학급 비교, 시험지 분석 예시']},
+ {v:2,app:'2.0.0',date:'2026-11-08',changes:[
+  '성적표(채점 현황) 샘플 4종을 분석해 형식을 확장했어요',
+  '시험에 학년·학기·종류를 추가했어요(terms → exams)',
+  '점수에 실기(performance)와 성적표 총점(reportedTotal)을 추가해 읽기 오류를 검산해요',
+  '성적표에 인쇄된 합계·평균(reported)을 추가했어요',
+  '문항별 오답 표기(items): 틀린 문항 번호와 고른 보기, 비운 문항',
+  '과목에 성적표의 과목 코드(code)를 추가했어요',
+  '스키마에 없는 항목을 따로 담는 extras를 추가했어요(다음 개정의 근거)',
+  '이름 변경: scores → results, class.termIds → class.examIds (v1 파일은 자동 변환)']},
+ {v:3,app:'3.0.0',date:'2026-11-08',changes:[
+  '학사 일정(schedule)을 추가했어요: 날짜·이름·종류. 학교 이름과 홈페이지 주소는 넣지 않아요',
+  'AI 도구가 만든 결과를 가져오는 약속(kind: reportCard · schedule · examJudgement)을 정했어요',
+  '비밀번호 암호화 파일(school-coach-encrypted)을 지원해요',
+  'v2 파일은 그대로 불러올 수 있어요(자동 변환)']}
+];
+const TYPES={math:'수학·계산형',sci:'과학',lang:'언어(국어·영어)',memo:'암기·서술형'};
+const TIP={
+ math:{task:'오답을 "개념 부족 / 계산 실수 / 문제 해석"으로 나눠 다시 풀기',min:25,home:'풀이 과정을 말로 설명해 보게 해 주세요'},
+ sci :{task:'틀린 문항의 단원 개념도 한 장으로 정리하기',min:20,home:'실험 내용을 일상 예시로 이야기해 보게 해 주세요'},
+ memo:{task:'핵심어를 백지에 써 보고 서술형 답안 2개 완성하기',min:15,home:'배운 내용을 3분 동안 설명해 보게 해 주세요'},
+ lang:{task:'서술형 쓰기 2문장 + 오답 어휘 정리',min:15,home:'읽은 글의 핵심을 한 문장으로 말해 보게 해 주세요'}
+};
+const COLORS=['#1B3FA0','#D3263F','#1E8A5A','#B7791F','#7B3FA0','#00A3E0','#E0702B','#5B6475','#A0306B','#3C8D2F'];
+const $=id=>document.getElementById(id);
+const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const sg=n=>(n>0?'+':'')+n;
+
+/* ===== 1. 데이터 형식(SCHEMA): 검증·문서·빈 양식이 모두 이 정의에서 나와요 ===== */
+const RE_ID=/^[a-z][a-z0-9_]{0,15}$/,RE_ALIAS=/^학생 [A-Z]{1,2}$/;
+const CONF=['높음','보통','낮음','읽기 어려움'];
+const KINDS={midterm:'중간고사',final:'기말고사',quiz:'단원평가',mock:'모의고사',other:'기타'};
+const FREE=(d,max)=>({k:'str',max:max||40,free:true,d});
+const SCORE=d=>({k:'int',min:0,max:100,d});
+const ITEMNO={k:'int',min:1,max:100,d:'문항 번호'};
+const CHOICE={k:'int',min:1,max:5,d:'보기 번호'};
+const SCAT={exam:'시험',event:'행사',holiday:'휴일',vacation:'방학',other:'기타'};
+const DATE_NODE=d=>({k:'str',re:/^\d{4}-\d{2}-\d{2}$/,d});
+const EVENTS_NODE={k:'arr',min:0,max:200,d:'학사 일정(주요 일정). 학교 이름·홈페이지 주소는 넣지 않아요',of:{k:'obj',req:['date','title','category'],f:{
+  date:DATE_NODE('시작 날짜(YYYY-MM-DD)'),
+  endDate:DATE_NODE('끝 날짜(하루짜리는 생략)'),
+  title:FREE('일정 이름',40),
+  category:{k:'enum',v:Object.keys(SCAT),d:'종류: exam·event·holiday·vacation·other'},
+  confirmed:{k:'bool',d:'학생이 확인했으면 true'}}}};
+let LENIENT=false;
+const SCHEMA={k:'obj',d:'데이터 파일 전체',req:['format','schemaVersion','meta','student','exams','subjects','results'],f:{
+ format:{k:'enum',v:[FORMAT],d:'파일 종류. 항상 "'+FORMAT+'"'},
+ schemaVersion:{k:'int',min:1,max:VERSION,d:'형식 버전. 지금은 '+VERSION},
+ meta:{k:'obj',d:'데이터 정보',req:['dataset','synthetic'],f:{
+  dataset:{k:'str',re:/^[A-Za-z0-9._-]{1,40}$/,d:'데이터 이름(영문·숫자). 사람 이름 금지'},
+  synthetic:{k:'bool',d:'가상(합성) 데이터이면 true'},
+  createdAt:{k:'str',re:/^\d{4}-\d{2}-\d{2}$/,d:'만든 날짜(YYYY-MM-DD)'}}},
+ school:{k:'obj',d:'학교(별칭만)',req:['alias'],f:{alias:{k:'str',re:/^[A-Z]{1,2}(중|고)?학교$/,d:'예: "A학교". 실제 학교 이름 금지'}}},
+ student:{k:'obj',d:'학생(가명만)',req:['pid','alias','grade'],f:{
+  pid:{k:'str',re:/^S\d{3,6}$/,d:'가명 코드. 예: S001. 실제 학번 금지'},
+  alias:{k:'str',re:RE_ALIAS,d:'예: "학생 A". 실제 이름 금지'},
+  grade:{k:'int',min:1,max:12,d:'현재 학년(숫자)'}}},
+ exams:{k:'arr',min:0,max:40,d:'시험 목록(시간 순서)',of:{k:'obj',req:['id','label','kind'],f:{
+  id:{k:'str',re:RE_ID,d:'시험 코드(영문 소문자로 시작, 숫자·_ 가능)'},
+  label:FREE('시험 이름. 예: "3-2 기말"',16),
+  gradeLevel:{k:'int',min:1,max:12,d:'시험을 본 학년'},
+  semester:{k:'int',min:1,max:2,d:'학기(1 또는 2)'},
+  kind:{k:'enum',v:Object.keys(KINDS),d:'시험 종류: midterm·final·quiz·mock·other'},
+  reported:{k:'obj',d:'성적표에 인쇄된 합계·평균(읽기 검산용)',f:{
+   sum:{k:'num',min:0,max:2000,d:'총점 합계'},average:{k:'num',min:0,max:100,d:'평균'}}}}}},
+ subjects:{k:'arr',min:1,max:20,d:'과목 목록',of:{k:'obj',req:['id','name','type'],f:{
+  id:{k:'str',re:RE_ID,d:'과목 코드(이 프로그램 안에서의 코드)'},
+  name:FREE('과목 이름',10),
+  type:{k:'enum',v:Object.keys(TYPES),d:'과목 유형: math·sci·lang·memo'},
+  code:{k:'str',re:/^[0-9A-Za-z]{1,4}$/,d:'성적표에 인쇄된 과목 코드(예: 04)'}}}},
+ results:{k:'arr',min:0,max:800,d:'시험·과목별 점수(응시한 것만)',of:{k:'obj',req:['exam','subject','objective','written'],f:{
+  exam:{k:'str',re:RE_ID,d:'시험 코드(exams의 id)'},
+  subject:{k:'str',re:RE_ID,d:'과목 코드(subjects의 id)'},
+  objective:SCORE('객관식 득점'),
+  written:SCORE('서술형(주관식) 득점'),
+  performance:SCORE('실기(수행평가) 득점. 없으면 생략'),
+  reportedTotal:SCORE('성적표에 인쇄된 과목 총점(읽기 검산용)')}}},
+ items:{k:'arr',min:0,max:400,d:'문항별 오답 표기(성적표의 문항 표). 맞은 문항은 적지 않아요',of:{k:'obj',req:['exam','subject','wrong'],f:{
+  exam:{k:'str',re:RE_ID,d:'시험 코드'},
+  subject:{k:'str',re:RE_ID,d:'과목 코드'},
+  count:{k:'int',min:1,max:100,d:'전체 문항 수'},
+  wrong:{k:'arr',max:100,d:'틀린 문항',of:{k:'obj',req:['n','chosen'],f:{
+   n:ITEMNO,chosen:{k:'arr',max:5,d:'학생이 고른 보기(복수 표기 가능, 모르면 빈 목록)',of:CHOICE}}}},
+  blank:{k:'arr',max:100,d:'비운 문항 번호',of:ITEMNO}}}},
+ extras:{k:'arr',min:0,max:200,d:'스키마에 아직 없는 항목(다음 개정의 근거). 이름·학번 같은 식별 정보는 넣지 않아요',of:{k:'obj',req:['label','value'],f:{
+  exam:{k:'str',re:RE_ID,d:'관련 시험 코드'},
+  subject:{k:'str',re:RE_ID,d:'관련 과목 코드'},
+  label:FREE('항목 이름',20),value:FREE('값',40)}}},
+ schedule:EVENTS_NODE,
+ profile:{k:'obj',d:'학습 성향(선택)',f:{traits:{k:'arr',max:8,d:'성향 목록',of:{k:'obj',req:['label','value'],f:{label:FREE('항목 이름',12),value:FREE('내용',16)}}}}},
+ class:{k:'obj',d:'학급 비교(교사 화면용, 선택)',req:['alias','examIds','students'],f:{
+  alias:{k:'str',re:/^\d학년 \d{1,2}반$/,d:'예: "3학년 3반"'},
+  examIds:{k:'arr',min:2,max:6,d:'비교할 시험 코드(시간 순서)',of:{k:'str',re:RE_ID}},
+  students:{k:'arr',min:1,max:60,d:'학급 학생(가명만)',of:{k:'obj',req:['alias','scores'],f:{
+   alias:{k:'str',re:RE_ALIAS,d:'예: "학생 B"'},
+   scores:{k:'map',keyRe:RE_ID,d:'과목 코드별 점수 목록(examIds와 같은 길이)',of:{k:'arr',min:2,max:6,of:{k:'int',min:0,max:100}}}}}}}},
+ examAnalyses:{k:'arr',max:20,d:'시험지 분석 예시(선택)',of:{k:'obj',req:['id','title','questions'],f:{
+  id:{k:'str',re:RE_ID},
+  title:FREE('분석 제목',40),
+  questions:{k:'arr',min:1,max:100,d:'문항 목록',of:{k:'obj',req:['no','points','key'],f:{
+   no:{k:'int',min:1,max:100,d:'문항 번호'},
+   points:{k:'num',min:0,max:100,d:'배점'},
+   topic:FREE('문항 주제',40),
+   studentAnswer:{k:'int',min:1,max:5,nullable:true,d:'학생이 고른 답. 읽지 못하면 null'},
+   studentAnswerConfidence:{k:'enum',v:CONF,d:'학생 답을 읽은 확신'},
+   key:{k:'int',min:1,max:5,d:'정답(임시 정답 포함)'},
+   keyConfidence:{k:'enum',v:CONF,d:'정답의 확신'},
+   trace:FREE('풀이 흔적 설명',160),
+   why:FREE('틀렸을 때 설명',200)}}},
+  tasks:{k:'arr',max:30,d:'보강 과제',of:{k:'obj',req:['q','text','minutes'],f:{
+   q:{k:'int',min:0,max:100,d:'연결된 문항 번호. 0이면 공통 과제'},
+   text:FREE('과제 내용',100),
+   minutes:{k:'int',min:5,max:60,d:'소요 시간(분)'},
+   onlyWrongAtLeast:{k:'int',min:1,max:100,d:'틀린 문항이 이 개수 이상일 때만 표시'}}}},
+  coaching:{k:'obj',d:'코칭 문구',f:{strength:FREE('잘한 점',120),pattern:FREE('틀린 문항이 2개 이상일 때의 공통점',200)}}}}}
+}};
+/* 성적표 이미지 파서가 돌려줘야 하는 결과의 형식(파서 계약). 이름·학번 같은 식별 항목은 이 형식에 없어요. */
+const EXTRACTION={k:'obj',d:'파서 출력 전체',req:['exam','subjects'],f:{
+ parser:FREE('파서 이름·버전',40),
+ confidence:{k:'num',min:0,max:1,d:'전체 확신(0~1)'},
+ exam:{k:'obj',d:'시험 정보',req:['label'],f:{
+  label:FREE('시험 이름. 예: "2학기 중간고사"',16),
+  gradeLevel:{k:'int',min:1,max:12,d:'학년'},
+  semester:{k:'int',min:1,max:2,d:'학기'},
+  kind:{k:'enum',v:Object.keys(KINDS),d:'시험 종류'}}},
+ subjects:{k:'arr',min:1,max:20,d:'과목별 결과',of:{k:'obj',req:['name'],f:{
+  name:FREE('과목 이름',10),
+  code:{k:'str',re:/^[0-9A-Za-z]{1,4}$/,d:'성적표의 과목 코드'},
+  objective:SCORE('객관식'),written:SCORE('서술형·주관식'),performance:SCORE('실기'),reportedTotal:SCORE('성적표 총점'),
+  itemCount:{k:'int',min:1,max:100,d:'전체 문항 수'},
+  wrong:{k:'arr',max:100,d:'틀린 문항',of:{k:'obj',req:['n','chosen'],f:{n:ITEMNO,chosen:{k:'arr',max:5,d:'고른 보기',of:CHOICE}}}},
+  blank:{k:'arr',max:100,d:'비운 문항',of:ITEMNO}}}},
+ reported:{k:'obj',d:'성적표의 합계·평균',f:{sum:{k:'num',min:0,max:2000,d:'총점 합계'},average:{k:'num',min:0,max:100,d:'평균'}}},
+ extras:{k:'arr',max:50,d:'스키마에 없는 항목',of:{k:'obj',req:['label','value'],f:{label:FREE('항목 이름',20),value:FREE('값',40)}}}
+}};
+/* 개인정보로 보이는 글을 막는 규칙(자유 입력 글에 적용) */
+const PII=[
+ [/01[016-9][-\s]?\d{3,4}[-\s]?\d{4}/,'전화번호'],
+ [/\d{6}[-\s]?[1-4]\d{6}/,'주민등록번호'],
+ [/[\w.+-]+@[\w-]+\.[\w.-]+/,'이메일 주소'],
+ [/[<>]/,'특수 문자(< >)'],
+ [/[가-힣]{2,}(초|중|고)등?학교/,'실제 학교 이름']
+];
+const NAMEISH=/[가-힣]{2,4}\s?(학생|선생님)(?![가-힣])/;
+const piiHit=s=>{for(const [re,l] of PII)if(re.test(s))return l;return null};
+
+function walk(n,v,p,E,W){
+  if(v===null&&n.nullable)return;
+  const at=p||'(전체)';
+  switch(n.k){
+   case 'obj':{
+    if(v===null||typeof v!=='object'||Array.isArray(v))return E(at,'객체여야 해요');
+    for(const key of Object.keys(v))if(!(key in n.f)){if(LENIENT){delete v[key];W(`${p?p+'.'+key:key}: 허용되지 않는 항목이라 버렸어요`)}else E(p?p+'.'+key:key,'허용되지 않는 항목이에요(개인정보가 섞이지 않도록 정해진 항목만 받아요)')}
+    for(const r of n.req||[])if(!(r in v))E(p?p+'.'+r:r,'필수 항목이 없어요');
+    for(const key of Object.keys(n.f))if(key in v)walk(n.f[key],v[key],p?p+'.'+key:key,E,W);
+    return}
+   case 'arr':
+    if(!Array.isArray(v))return E(at,'목록이어야 해요');
+    if(n.min!=null&&v.length<n.min)E(at,`${n.min}개 이상이어야 해요`);
+    if(n.max!=null&&v.length>n.max)E(at,`${n.max}개 이하여야 해요`);
+    v.slice(0,n.max!=null?n.max:v.length).forEach((x,i)=>walk(n.of,x,`${p}[${i}]`,E,W));return;
+   case 'map':
+    if(v===null||typeof v!=='object'||Array.isArray(v))return E(at,'객체여야 해요');
+    for(const key of Object.keys(v)){if(!n.keyRe.test(key))E(`${p}.${key}`,'코드 형식이 맞지 않아요');walk(n.of,v[key],`${p}.${key}`,E,W)}return;
+   case 'str':
+    if(typeof v!=='string')return E(at,'글자여야 해요');
+    if(n.max&&v.length>n.max)E(at,`${n.max}자 이하여야 해요`);
+    if(n.re&&!n.re.test(v))E(at,'형식이 맞지 않아요. '+(n.d||''));
+    if(n.free){const h=piiHit(v);if(h)E(at,`${h}처럼 보이는 글은 받지 않아요`);else if(NAMEISH.test(v))W(`${at}: 사람 이름처럼 보이는 표현이 있는지 확인해 주세요`)}
+    return;
+   case 'int':
+    if(!Number.isInteger(v))return E(at,'정수여야 해요');
+    if(n.min!=null&&v<n.min||n.max!=null&&v>n.max)E(at,`${n.min}~${n.max} 사이여야 해요`);return;
+   case 'num':
+    if(typeof v!=='number'||!isFinite(v))return E(at,'숫자여야 해요');
+    if(n.min!=null&&v<n.min||n.max!=null&&v>n.max)E(at,`${n.min}~${n.max} 사이여야 해요`);return;
+   case 'bool': if(typeof v!=='boolean')E(at,'true 또는 false여야 해요');return;
+   case 'enum': if(!n.v.includes(v))E(at,`다음 중 하나여야 해요: ${n.v.join(', ')}`);return;
+  }
+}
+function validate(d){
+  const errors=[],warns=[],E=(p,m)=>{if(errors.length<40)errors.push(`${p}: ${m}`)},W=m=>warns.push(m);
+  walk(SCHEMA,d,'',E,W);
+  if(errors.length)return {errors,warns};
+  const dup=(arr,key,l)=>{const s=new Set();arr.forEach(x=>{if(s.has(x[key]))E(l,`'${x[key]}'가 중복돼요`);s.add(x[key])})};
+  dup(d.exams,'id','exams');dup(d.subjects,'id','subjects');
+  const T=new Set(d.exams.map(t=>t.id)),S=new Set(d.subjects.map(s=>s.id)),seen=new Set(),sums={};
+  d.results.forEach((r,i)=>{
+    if(!T.has(r.exam))E(`results[${i}].exam`,`exams에 없는 시험 코드예요: ${r.exam}`);
+    if(!S.has(r.subject))E(`results[${i}].subject`,`subjects에 없는 과목 코드예요: ${r.subject}`);
+    const total=r.objective+r.written+(r.performance||0);
+    if(total>100)E(`results[${i}]`,'객관식+서술형+실기가 100점을 넘어요');
+    const k=r.exam+'|'+r.subject;if(seen.has(k))E(`results[${i}]`,'같은 시험·과목 점수가 두 번 나와요');seen.add(k);
+    if(r.reportedTotal!=null&&r.reportedTotal!==total)W(`results[${i}]: 입력한 합 ${total}점과 성적표 총점 ${r.reportedTotal}점이 달라요`);
+    const x=sums[r.exam]=sums[r.exam]||{s:0,n:0};x.s+=total;x.n++;
+  });
+  d.exams.forEach((t,i)=>{
+    const x=sums[t.id];if(!t.reported||!x)return;
+    if(t.reported.sum!=null&&t.reported.sum!==x.s)W(`exams[${i}]: 점수 합 ${x.s}점과 성적표 합계 ${t.reported.sum}점이 달라요`);
+    if(t.reported.average!=null&&Math.abs(t.reported.average-x.s/x.n)>0.01)W(`exams[${i}]: 평균 ${(x.s/x.n).toFixed(2)}와 성적표 평균 ${t.reported.average}가 달라요`);
+  });
+  const ipair=new Set();
+  (d.items||[]).forEach((it,i)=>{
+    if(!T.has(it.exam))E(`items[${i}].exam`,'exams에 없는 시험 코드예요');
+    if(!S.has(it.subject))E(`items[${i}].subject`,'subjects에 없는 과목 코드예요');
+    const k=it.exam+'|'+it.subject;if(ipair.has(k))E(`items[${i}]`,'같은 시험·과목이 두 번 나와요');ipair.add(k);
+    const ns=new Set();
+    it.wrong.forEach(w=>{
+      if(ns.has(w.n))E(`items[${i}].wrong`,`문항 ${w.n}가 중복돼요`);ns.add(w.n);
+      if(it.count&&w.n>it.count)E(`items[${i}].wrong`,`문항 ${w.n}가 전체 문항 수(${it.count})보다 커요`);
+      if(new Set(w.chosen).size!==w.chosen.length)E(`items[${i}].wrong`,`문항 ${w.n}의 보기가 중복돼요`);
+    });
+    (it.blank||[]).forEach(n=>{if(ns.has(n))E(`items[${i}].blank`,`문항 ${n}가 틀린 문항과 겹쳐요`);if(it.count&&n>it.count)E(`items[${i}].blank`,`문항 ${n}가 전체 문항 수보다 커요`)});
+  });
+  (d.extras||[]).forEach((x,i)=>{
+    if(x.exam&&!T.has(x.exam))E(`extras[${i}].exam`,'exams에 없는 시험 코드예요');
+    if(x.subject&&!S.has(x.subject))E(`extras[${i}].subject`,'subjects에 없는 과목 코드예요');
+    if(IDENT.test(x.label))E(`extras[${i}].label`,'이름·학번 같은 식별 항목은 받지 않아요');
+  });
+  if(d.class){
+    d.class.examIds.forEach((t,i)=>{if(!T.has(t))E(`class.examIds[${i}]`,`exams에 없는 시험 코드예요: ${t}`)});
+    const names=new Set();
+    d.class.students.forEach((s,i)=>{
+      if(names.has(s.alias))E(`class.students[${i}].alias`,'학생 별칭이 중복돼요');names.add(s.alias);
+      for(const [sid,arr] of Object.entries(s.scores)){
+        if(!S.has(sid))E(`class.students[${i}].scores.${sid}`,'subjects에 없는 과목 코드예요');
+        if(arr.length!==d.class.examIds.length)E(`class.students[${i}].scores.${sid}`,`점수 개수가 examIds(${d.class.examIds.length}개)와 달라요`);
+      }
+    });
+  }
+  (d.examAnalyses||[]).forEach((a,i)=>{
+    const nos=new Set();a.questions.forEach(q=>{if(nos.has(q.no))E(`examAnalyses[${i}].questions`,`문항 번호 ${q.no}가 중복돼요`);nos.add(q.no)});
+    (a.tasks||[]).forEach((t,j)=>{if(t.q!==0&&!nos.has(t.q))E(`examAnalyses[${i}].tasks[${j}].q`,'없는 문항 번호예요')});
+  });
+  const sk=new Set();
+  (d.schedule||[]).forEach((e,i)=>{
+    if(!isDate(e.date))E(`schedule[${i}].date`,'없는 날짜예요');
+    if(e.endDate!=null&&!isDate(e.endDate))E(`schedule[${i}].endDate`,'없는 날짜예요');
+    else if(e.endDate!=null&&e.endDate<e.date)E(`schedule[${i}].endDate`,'끝 날짜가 시작 날짜보다 빨라요');
+    const k=e.date+'|'+e.title;if(sk.has(k))W(`schedule[${i}]: 같은 날짜·이름의 일정이 중복돼요`);sk.add(k);
+  });
+  if(!errors.length&&d.meta.synthetic===false)W('실제 학생 자료로 표시돼 있어요. 가명 코드·별칭만 들어 있는지 한 번 더 확인해 주세요.');
+  return {errors,warns};
+}
+/* 파서 결과 검사: 허용되지 않는 항목(이름 등)은 버리고, 나머지가 형식에 맞는지 봐요 */
+function validateExtraction(j){
+  const errors=[],warns=[];
+  LENIENT=true;
+  try{walk(EXTRACTION,j,'',(p,m)=>{if(errors.length<20)errors.push(`${p}: ${m}`)},m=>warns.push(m))}finally{LENIENT=false}
+  if(!errors.length&&Array.isArray(j.extras)){
+    const n0=j.extras.length;j.extras=j.extras.filter(x=>!IDENT.test(x.label));
+    if(j.extras.length<n0)warns.push(`식별 정보로 보이는 항목 ${n0-j.extras.length}개를 버렸어요`);
+  }
+  return {errors,warns};
+}
+/* 이전 버전 파일을 새 형식으로 바꾸는 자리. 형식이 바뀌면 여기에 변환 함수를 추가해요(MIGRATIONS[이전버전]). */
+const IDENT=/이름|성명|학번|주민|생년|주소|연락|전화|이메일|학교명|^반$|^번호$|출석번호/;
+const MIGRATIONS={
+ 2:d=>({...d,schemaVersion:3}), // v2 → v3: 학사 일정(schedule) 추가, 기존 항목은 그대로
+ 1:d=>{ // v1 → v2
+  const o={...d};
+  o.exams=(d.terms||[]).map(t=>({id:t.id,label:t.label,kind:'other'}));
+  o.results=(d.scores||[]).map(s=>({exam:s.term,subject:s.subject,objective:s.objective,written:s.written}));
+  delete o.terms;delete o.scores;
+  if(d.class){o.class={...d.class,examIds:d.class.termIds};delete o.class.termIds}
+  o.schemaVersion=2;return o;
+ }
+};
+function migrate(d){
+  let g=0;
+  while(d&&typeof d==='object'&&Number.isInteger(d.schemaVersion)&&d.schemaVersion<VERSION&&g++<20){
+    const f=MIGRATIONS[d.schemaVersion];if(!f)break;d=f(d);
+  }
+  return d;
+}
+/* 형식 설명표(화면에 보여줘요) */
+function docRows(n,p,out){
+  const kids=n.k==='obj'?Object.entries(n.f).map(([k,c])=>[p?p+'.'+k:k,c,(n.req||[]).includes(k)])
+    :n.k==='arr'?[[p+'[]',n.of,true]]:n.k==='map'?[[p+'{코드}',n.of,true]]:[];
+  kids.forEach(([path,c,req])=>{
+    const tl={obj:'객체',arr:'목록',map:'맵',str:'글자',int:'정수',num:'숫자',bool:'참/거짓',enum:'선택값'}[c.k];
+    let rule='';
+    if(c.k==='str'&&c.re)rule=c.re.source;else if(c.k==='str'&&c.max)rule='최대 '+c.max+'자';
+    else if(c.k==='int'||c.k==='num')rule=`${c.min}~${c.max}`;
+    else if(c.k==='enum')rule=c.v.join(' | ');
+    else if(c.k==='arr'&&(c.min!=null||c.max!=null))rule=`${c.min!=null?c.min:0}~${c.max!=null?c.max:'∞'}개`;
+    out.push({path,tl:tl+(c.nullable?'(null 가능)':''),req,d:c.d||'',rule});
+    docRows(c,path,out);
+  });
+  return out;
+}
+/* 빈 양식: 형식 검사를 통과하는 가장 작은 예시(가상 별칭·0점) */
+function templateData(){
+  return {format:FORMAT,schemaVersion:VERSION,meta:{dataset:'template-empty',synthetic:true,createdAt:isoToday()},
+    school:{alias:'A학교'},student:{pid:'S001',alias:'학생 A',grade:3},
+    exams:[{id:'t1',label:'시험1',kind:'midterm'},{id:'t2',label:'시험2',kind:'final'}],
+    subjects:[{id:'kor',name:'국어',type:'lang'},{id:'math',name:'수학',type:'math'}],
+    results:[{exam:'t1',subject:'kor',objective:0,written:0},{exam:'t1',subject:'math',objective:0,written:0},
+             {exam:'t2',subject:'kor',objective:0,written:0},{exam:'t2',subject:'math',objective:0,written:0}],
+    profile:{traits:[{label:'학습 유형',value:'(입력)'}]}};
+}
+function isoToday(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
+
+/* ===== 2. 화면 메모리의 데이터(저장하지 않아요) ===== */
+let DATA=null,TERMS=[],TERMIDS=[],SUB={},KEYS=[],TRAIT=[],CLASS=null,EXAMS=[],TASKS=[],EX=null,dirty=false,ITEMS={},EXTRAS=[],EXAMMETA={};
+const META={school:'',student:'',synthetic:false,dataset:''};
+const done=new Set(),goals={},share={scores:true,trend:true,ai:true};
+const CONFIG={parser:{mode:'manual',endpoint:''}};
+let INDEX=null,SCHEDULE=[];
+const st={role:'D',tab:'home',subj:null,pick:0,sel:null,multi:false,avg:false,del:-1,msg:null,imp:null,aiText:'',aiMsg:'',aiOk:false,enc:null,
+  data:{result:null},ex:{view:'home',i:0,official:{},mine:{},done:{},done2:{},files:{exam:[],ans:[],key:[]},n:20,rows:[],msg:''}};
+st.ex.rows=Array.from({length:20},()=>({mine:null,key:null,unit:'',type:''}));
+const DEF=()=>Object.keys(SUB);
+const blankArr=()=>TERMIDS.map(()=>null);
+const newSub=(n,t,code)=>({n,t,code:code||undefined,c:blankArr(),perf:blankArr(),rep:blankArr()});
+
+function applyData(d){
+  DATA=d;
+  TERMS=d.exams.map(t=>t.label);TERMIDS=d.exams.map(t=>t.id);
+  EXAMMETA={};d.exams.forEach(t=>{EXAMMETA[t.id]={gradeLevel:t.gradeLevel,semester:t.semester,kind:t.kind,reported:t.reported}});
+  SUB={};d.subjects.forEach(s=>{SUB[s.id]=newSub(s.name,s.type,s.code)});
+  d.results.forEach(r=>{const i=TERMIDS.indexOf(r.exam),s=SUB[r.subject];
+    s.c[i]=[r.objective,r.written];s.perf[i]=r.performance==null?null:r.performance;s.rep[i]=r.reportedTotal==null?null:r.reportedTotal});
+  ITEMS={};(d.items||[]).forEach(it=>{ITEMS[it.exam+'|'+it.subject]=it});
+  EXTRAS=(d.extras||[]).slice();
+  SCHEDULE=(d.schedule||[]).map(e=>({...e}));
+  TRAIT=((d.profile&&d.profile.traits)||[]).map(x=>[x.label,x.value]);
+  CLASS=d.class?{alias:d.class.alias,termIds:d.class.examIds,labels:d.class.examIds.map(id=>TERMS[TERMIDS.indexOf(id)]),
+    students:d.class.students.map(s=>({n:s.alias,s:s.scores}))}:null;
+  EXAMS=d.examAnalyses||[];
+  META.school=d.school?d.school.alias:'';META.student=d.student.alias;META.synthetic=d.meta.synthetic;META.dataset=d.meta.dataset;
+  st.subj=null;st.sel=null;st.multi=false;st.pick=0;st.msg=null;st.ex.view='home';st.imp=null;
+  rebuild();
+}
+function rebuild(){
+  for(const k of DEF())SUB[k].s=SUB[k].c.map((x,i)=>x?x[0]+x[1]+(SUB[k].perf[i]||0):null);
+  KEYS=DEF().filter(k=>SUB[k].s.some(v=>v!=null));
+  if(!st.subj||!KEYS.includes(st.subj))st.subj=KEYS[0]||null;
+  st.sel=(st.sel||[st.subj]).filter(k=>KEYS.includes(k));if(!st.sel.length&&KEYS.length)st.sel=[KEYS[0]];if(!st.multi&&st.sel.length)st.sel=[st.sel[0]];
+  done.clear();TASKS=KEYS.length?plan():[];
+  const need=KEYS.length?byUrgency().filter(a=>!a.stale&&(a.level==='focus'||a.level==='watch')).slice(0,3).map(a=>a.k):[];
+  for(const k of Object.keys(goals))if(!need.includes(k))delete goals[k];
+  need.forEach(k=>{const a=analyze(k);goals[k]=Math.max(a.now,Math.min(100,goals[k]||(a.prev||a.now+5)))});
+}
+function toData(){
+  const results=[];
+  DEF().forEach(k=>SUB[k].c.forEach((c,i)=>{if(c){
+    const r={exam:TERMIDS[i],subject:k,objective:c[0],written:c[1]};
+    if(SUB[k].perf[i]!=null)r.performance=SUB[k].perf[i];
+    if(SUB[k].rep[i]!=null)r.reportedTotal=SUB[k].rep[i];
+    results.push(r)}}));
+  const exams=TERMIDS.map((id,i)=>{const m=EXAMMETA[id]||{},o={id,label:TERMS[i],kind:m.kind||'other'};
+    if(m.gradeLevel)o.gradeLevel=m.gradeLevel;if(m.semester)o.semester=m.semester;if(m.reported)o.reported=m.reported;return o});
+  const subjects=DEF().map(k=>{const o={id:k,name:SUB[k].n,type:SUB[k].t};if(SUB[k].code)o.code=SUB[k].code;return o});
+  const d={format:FORMAT,schemaVersion:VERSION,meta:{...DATA.meta,createdAt:isoToday()},school:DATA.school,student:DATA.student,
+    exams,subjects,results,items:Object.values(ITEMS),extras:EXTRAS,schedule:SCHEDULE,profile:DATA.profile,class:DATA.class,examAnalyses:DATA.examAnalyses};
+  return JSON.parse(JSON.stringify(d));
+}
+function download(name,obj){
+  const b=new Blob([JSON.stringify(obj,null,2)],{type:'application/json'}),u=URL.createObjectURL(b),a=document.createElement('a');
+  a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),1500);
+}
+function revokeFiles(list){list.forEach(f=>f.url&&URL.revokeObjectURL(f.url));list.length=0}
+function clearAll(){
+  for(const k of Object.keys(st.ex.files))revokeFiles(st.ex.files[k]);
+  if(st.imp)revokeFiles(st.imp.files);st.imp=null;
+  DATA=null;TERMS=[];TERMIDS=[];SUB={};KEYS=[];TRAIT=[];CLASS=null;EXAMS=[];TASKS=[];EX=null;dirty=false;ITEMS={};EXTRAS=[];EXAMMETA={};SCHEDULE=[];st.enc=null;st.aiText='';st.aiMsg='';
+  META.school=META.student=META.dataset='';META.synthetic=false;
+  done.clear();for(const k of Object.keys(goals))delete goals[k];
+  st.role='D';st.tab='home';st.data.result=null;st.ex.view='home';st.ex.done={};st.ex.done2={};st.ex.official={};st.ex.mine={};
+}
+
+/* ===== 3. 분석 엔진(규칙 기반) ===== */
+const valid=a=>a.map((v,i)=>[v,i]).filter(x=>x[0]!=null);
+const lvl=v=>v>=90?'A':v>=80?'B':v>=70?'C':v>=60?'D':'E';
+function analyze(k){
+  const o=SUB[k],v=valid(o.s),L=v[v.length-1],P=v[v.length-2],F=v[0];
+  const d=P?L[0]-P[0]:0,adj=P?(L[1]-P[1]===1):false,span=L[0]-F[0];
+  let level='steady';
+  if(d<=-10)level='focus';else if(d<=-5)level='watch';else if(span>=8&&d>=0)level='rise';
+  const cl=o.c[L[1]],cp=P?o.c[P[1]]:cl;
+  return {k,now:L[0],prev:P?P[0]:null,pi:P?P[1]:null,d,adj,span,first:F[0],level,urgency:d*(adj?1:0.7),
+    stale:L[1]!==TERMS.length-1,li:L[1],cp,cl,dO:cl[0]-cp[0],dS:cl[1]-cp[1],max:Math.max(...v.map(x=>x[0]))};
+}
+const ALL=()=>KEYS.map(analyze);
+const byUrgency=()=>ALL().sort((a,b)=>a.urgency-b.urgency);
+function commonAvg(){
+  const L=TERMS.length-1;
+  for(let p=L-1;p>=0;p--){
+    const ks=KEYS.filter(k=>SUB[k].s[p]!=null&&SUB[k].s[L]!=null);
+    if(ks.length>=2){const m=ks.reduce((t,k)=>t+SUB[k].s[p],0)/ks.length,f=ks.reduce((t,k)=>t+SUB[k].s[L],0)/ks.length;return {ks,m,f,d:f-m,pn:TERMS[p]}}
+  }
+  return null;
+}
+function coach(k){
+  const o=SUB[k],a=analyze(k),n=esc(o.n),t=o.t;
+  if(a.prev==null)return `${n}: 첫 기록이에요(${a.now}점). 다음 시험부터 변화를 함께 볼게요.`;
+  const ref=a.adj?'직전 시험':esc(TERMS[a.pi]);
+  const trend={
+   focus:`${n}: ${ref}보다 <mark>${-a.d}점 내렸어요</mark>(${a.prev}→${a.now}).`,
+   watch:`${n}: ${ref}보다 ${-a.d}점 내려갔어요(${a.prev}→${a.now}).`,
+   rise:`${n}: ${a.first}점에서 ${a.now}점으로 <mark>꾸준히 올랐어요</mark>.`,
+   steady:`${n}: ${a.now}점으로 안정적이에요.`}[a.level];
+  const down=a.level==='focus'||a.level==='watch';let why='';
+  if(a.dO<=-8&&down&&a.dS>=0)why=` 줄어든 점수는 대부분 <mark>객관식(${a.dO}점)</mark>이고, 서술형은 ${sg(a.dS)}점이에요. 실력 자체보다 선택형 문항의 실수나 개념 혼동이 원인일 수 있어요.`;
+  else if(a.dO<=-8&&down)why=` 객관식(${a.dO}점)과 서술형(${a.dS}점)이 모두 줄었어요. 개념 이해부터 다시 확인해요.`;
+  else if(a.dO<=-8)why=` 객관식은 ${a.dO}점, 서술형은 ${sg(a.dS)}점으로 점수 구성이 달라졌어요.`;
+  else if(a.dS>=5)why=` <mark>서술형이 ${sg(a.dS)}점</mark> 올랐어요. 쓰기 연습이 효과를 내고 있어요.`;
+  else if(a.dO<=-3)why=` 객관식에서 ${-a.dO}점 아쉬웠어요.`;
+  return esc2(trend+why+(down?` 다음 한 걸음: ${TIP[t].task}.`:''));
+}
+/* 과목 이름은 사용자 입력이라 한 번 더 걸러서 mark만 살려요 */
+function esc2(s){return s}
+function parentText(k){
+  const o=SUB[k],a=analyze(k);
+  const head={focus:`${o.n}은 이번에 ${-a.d}점 내려갔어요(${a.prev}→${a.now}).`,watch:`${o.n}은 ${-a.d}점 내려갔지만 큰 흐름은 괜찮아요.`,
+   rise:`${o.n}은 ${a.first}점에서 ${a.now}점으로 꾸준히 올랐어요.`,steady:`${o.n}은 ${a.now}점으로 안정적이에요.`}[a.level];
+  return `${head} 집에서는 "${TIP[o.t].home}".`;
+}
+function plan(){
+  const out=[],U=byUrgency().filter(a=>!a.stale);
+  U.filter(a=>a.level==='focus'||a.level==='watch').slice(0,3).forEach(a=>out.push({id:a.k,subj:SUB[a.k].n,title:TIP[SUB[a.k].t].task,min:TIP[SUB[a.k].t].min}));
+  const r=U.filter(a=>a.level==='rise')[0];
+  if(r)out.push({id:'keep',subj:SUB[r.k].n,title:'지금 방식 유지: 서술형 쓰기 주 2회',min:10});
+  return out;
+}
+
+/* ===== 4. 라인차트 ===== */
+function chart(keys,o={}){
+  const T=TERMS.length,W=Math.max(340,64*T),H=o.h||230,p={l:30,r:18,t:16,b:32};
+  const all=keys.flatMap(k=>SUB[k].s.filter(v=>v!=null));
+  const mn=Math.min(60,Math.floor((Math.min(...all,100))/10)*10),mx=100;
+  const x=i=>T===1?W/2:p.l+i*(W-p.l-p.r)/(T-1),y=v=>p.t+(mx-v)*(H-p.t-p.b)/(mx-mn);
+  let g='';
+  for(let v=mn;v<=mx;v+=10)g+=`<line x1="${p.l}" x2="${W-p.r}" y1="${y(v)}" y2="${y(v)}" stroke="#DFE6F0"/><text x="4" y="${y(v)+4}" font-size="10" fill="#5B6475">${v}</text>`;
+  g+=TERMS.map((t,i)=>`<text x="${x(i)}" y="${H-10}" font-size="10" text-anchor="middle" fill="#5B6475">${esc(t)}</text>`).join('');
+  let body='';
+  if(o.avg){
+    const pts=TERMS.map((_,i)=>{const vs=KEYS.map(k=>SUB[k].s[i]).filter(v=>v!=null);return vs.length?[vs.reduce((a,b)=>a+b,0)/vs.length,i]:null}).filter(Boolean);
+    body+=`<path d="${pts.map((q,i)=>(i?'L':'M')+x(q[1])+','+y(q[0])).join('')}" fill="none" stroke="#1C2230" stroke-width="2" stroke-dasharray="6 4"/>`;
+    pts.forEach(q=>body+=`<circle cx="${x(q[1])}" cy="${y(q[0])}" r="3" fill="#1C2230"/>`);
+  }
+  keys.forEach(k=>{
+    const col=keys.length===1?'#1B3FA0':COLORS[KEYS.indexOf(k)%COLORS.length],pts=valid(SUB[k].s),last=pts[pts.length-1];
+    if(keys.length===1){const m=pts.reduce((t,q)=>t+q[0],0)/pts.length;body+=`<line x1="${p.l}" x2="${W-p.r}" y1="${y(m)}" y2="${y(m)}" stroke="#5B6475" stroke-dasharray="5 4" stroke-width="1.5"/>`}
+    body+=`<path d="${pts.map((q,i)=>(i?'L':'M')+x(q[1])+','+y(q[0])).join('')}" fill="none" stroke="${col}" stroke-width="${keys.length===1?3:2.5}" stroke-linejoin="round"/>`;
+    pts.forEach(q=>{
+      const isL=q===last;
+      body+=`<circle cx="${x(q[1])}" cy="${y(q[0])}" r="${isL?5.5:3.5}" fill="${isL?'#FFE15A':'#fff'}" stroke="${col}" stroke-width="2.5"/>`;
+      if(o.labels||isL)body+=`<text x="${x(q[1])}" y="${y(q[0])-9}" font-size="10.5" font-weight="700" text-anchor="middle" fill="${col}">${q[0]}</text>`;
+    });
+    if(o.ring&&analyze(k).level==='focus'&&last)body+=`<ellipse cx="${x(last[1])}" cy="${y(last[0])}" rx="18" ry="13" fill="none" stroke="#D3263F" stroke-width="2.5" transform="rotate(-8 ${x(last[1])} ${y(last[0])})"/>`;
+  });
+  return `<div class="scroll"><svg viewBox="0 0 ${W} ${H}" style="width:100%;min-width:${W}px" role="img" aria-label="점수 추세 그래프">${g}${body}</svg></div>`;
+}
+const arrow=a=>a.prev==null?`<span class="sub">첫 기록</span>`:a.d>=3?`<span class="up">▲${a.d}</span>`:a.d<=-3?`<span class="down">▼${-a.d}</span>`:`<span class="sub">―</span>`;
+
+/* ===== 5. 데이터 화면 ===== */
+function dataView(){
+  const R=st.data.result,P=CONFIG.parser;
+  const status=DATA?`<b>${esc(META.dataset)}</b><br><span class="sub">${META.synthetic?'가상 데이터':'가명 처리 데이터'} · ${esc(META.student)} · 시험 ${TERMS.length}회 · 과목 ${DEF().length}개${dirty?' · <b class="down">저장 안 된 변경이 있어요</b>':''}</span>`
+    :'<b>불러온 데이터가 없어요</b><br><span class="sub">아래에서 데이터를 고르거나 새로 시작해 주세요.</span>';
+  const idx=INDEX===null?'<p class="sub" style="margin-top:8px">이 위치의 data/index.json을 찾지 못했어요. 파일로 직접 열었거나 목록이 없는 경우예요. 아래 "데이터 파일 불러오기"로 고르세요.</p>'
+    :INDEX.length?`<p class="sub" style="margin-top:8px">이 프로그램과 같은 위치의 data 폴더에서 찾았어요.</p><div class="btns">${INDEX.map(x=>`<button class="btn main" data-d="open" data-file="${esc(x.file)}">${esc(x.title)}</button>`).join('')}</div>`
+    :'<p class="sub" style="margin-top:8px">data 폴더에 등록된 데이터가 없어요(data/index.json의 datasets가 비어 있어요).</p>';
+  const res=R?`<div class="pen ${R.errors.length?'':'good'}"><b>${R.errors.length?'불러오기를 막았어요':'불러왔어요'}</b> <span class="sub">${esc(R.name)}</span>
+    ${R.errors.length?`<ul class="errs">${R.errors.map(e=>`<li>${esc(e)}</li>`).join('')}</ul><p class="sub" style="margin-top:6px">위 항목을 고친 뒤 다시 불러와 주세요. 이전에 불러온 데이터는 그대로예요.</p>`:'<br>형식 검사와 개인정보 검사를 통과했어요.'}
+    ${R.warns.length?`<ul class="errs">${R.warns.map(e=>`<li>주의: ${esc(e)}</li>`).join('')}</ul>`:''}</div>`:'';
+  const rows=docRows(SCHEMA,'',[]),prow=docRows(EXTRACTION,'',[]);
+  const tbl=rs=>`<div class="scroll"><table class="fmt"><thead><tr><th>항목</th><th>형식</th><th>필수</th><th>설명·규칙</th></tr></thead><tbody>
+   ${rs.map(r=>`<tr><td><code>${esc(r.path)}</code></td><td>${r.tl}</td><td>${r.req?'필수':'선택'}</td><td>${esc(r.d)}${r.rule?`<br><code>${esc(r.rule)}</code>`:''}</td></tr>`).join('')}</tbody></table></div>`;
+  const hasExtra=EXTRAS.length||(st.imp&&st.imp.extras.length);
+  return `<h1>데이터</h1><p class="sub">프로그램 v${APP_VERSION} · 데이터 형식 v${VERSION}. 프로그램과 데이터는 따로 있어요.</p>
+  <div class="card">${status}${idx}
+   <input id="f-data" class="vh" type="file" accept=".json,application/json">
+   <div class="btns"><label for="f-data" class="btn">데이터 파일 불러오기</label>
+   <button class="btn" data-d="new">새로 시작</button>
+   <button class="btn" data-d="template">빈 양식 받기</button>
+   ${DATA?`<button class="btn" data-d="encsave">암호화해서 받기</button><button class="btn" data-d="export">그대로 받기</button><button class="btn" data-d="clear">화면의 데이터 지우기</button>`:''}</div></div>
+  ${res}
+  ${encUI()}${aiBox()}
+  <h2>개인정보 보호 원칙</h2>
+  <ul class="rules">
+   <li>데이터는 화면 메모리에만 있어요. 브라우저 저장소와 쿠키에 저장하지 않아요.</li>
+   <li>읽는 곳은 이 프로그램과 같은 위치의 data 폴더와 config.json뿐이에요. 다른 곳으로 보내는 연결은 보안 정책(CSP)으로 막혀 있어요.</li>
+   <li>실제 이름, 학번, 학교 이름은 받지 않아요. 가명 코드와 별칭만 허용하고, 전화번호·주민번호·이메일·실제 학교 이름처럼 보이는 글은 막아요.</li>
+   <li>성적표·시험지 사진은 화면에서만 보여주고 저장하지 않아요. 이름이 보이면 가려서 올려 주세요.</li>
+   <li>창을 닫으면 모두 사라져요. 보관이 필요하면 "현재 데이터 받기"로 파일을 직접 보관해 주세요.</li></ul>
+  <h2>성적표 읽기(파서)</h2>
+  <div class="card"><b>${P.mode==='remote'&&P.endpoint?'자동 읽기: 연결됨':'자동 읽기: 연결 안 됨 (직접 입력)'}</b><br>
+   <span class="sub">성적표 사진에서 값을 읽는 부분은 교체할 수 있게 분리돼 있어요. 읽은 결과는 아래 "파서 출력 형식"에 맞아야 하고, 학생이 확인한 뒤에만 데이터에 들어가요. 연결 방법은 README를 보세요.</span></div>
+  ${hasExtra?`<div class="card"><b>스키마에 없는 항목이 있어요</b><br><span class="sub">성적표에서 형식에 아직 없는 항목이 발견됐어요. 값은 빼고 항목 이름만 담은 보고서를 받아 개발 담당자에게 전달하면, 다음 형식 버전에 반영해요.</span>
+   <div class="btns"><button class="btn" data-d="extras">항목 보고서 받기</button></div></div>`:''}
+  <h2>데이터 형식</h2>
+  <p class="sub">이 표에 없는 항목이 파일에 있으면 불러오기를 막아요. 형식이 바뀌면 이전 파일은 프로그램이 새 형식으로 바꿔 줘요.</p>
+  <details class="dt"><summary>데이터 파일 형식 (${rows.length}개 항목)</summary>${tbl(rows)}</details>
+  <details class="dt"><summary>파서 출력 형식 (${prow.length}개 항목)</summary>${tbl(prow)}</details>
+  <details class="dt"><summary>형식 변경 기록</summary>${[...SCHEMA_HISTORY].reverse().map(h=>`<p style="margin-top:8px"><b>형식 v${h.v}</b> <span class="sub">프로그램 v${h.app} · ${h.date}</span></p><ul class="rules">${h.changes.map(c=>`<li>${esc(c)}</li>`).join('')}</ul>`).join('')}</details>`;
+}
+
+/* ===== 6. 학생 화면 ===== */
+function sHome(){
+  const mins=TASKS.filter(t=>done.has(t.id)).reduce((s,t)=>s+t.min,0),tot=TASKS.reduce((s,t)=>s+t.min,0);
+  const rows=KEYS.map(k=>{const a=analyze(k);
+    return `<button class="row" data-go="${k}"><span class="nm">${esc(SUB[k].n)}</span><span class="sub">${arrow(a)} ${a.prev==null?'':a.stale?esc(TERMS[a.li])+' 기준':a.adj?'직전 대비':esc(TERMS[a.pi])+' 대비'}</span><span class="sc">${a.now}</span><span class="lv ${a.level==='focus'?'low':''}">${lvl(a.now)}</span></button>`}).join('');
+  const f=byUrgency().filter(a=>!a.stale)[0]||byUrgency()[0],c=commonAvg();
+  return `<h1>${esc(META.student)}, 안녕하세요</h1><p class="sub">${esc(META.school)} · ${esc(TERMS[TERMS.length-1])} 결과${META.synthetic?' · 가상 데이터':''}</p>
+  <div class="slip" role="group" aria-label="과목별 성적">${rows}</div>
+  ${c?`<p class="sub" style="margin-top:6px">같은 ${c.ks.length}과목(${c.ks.map(k=>esc(SUB[k].n)).join('·')}) 평균 ${esc(c.pn)} ${c.m.toFixed(2)} → ${c.f.toFixed(2)} (${c.d>0?'+':''}${c.d.toFixed(2)})</p>`:''}
+  <div class="pen"><b>AI 빨간펜</b><br>${coach(f.k)}</div>
+  ${scheduleCard(true)}
+  <h2>이번 주 학습 (${mins}/${tot}분)</h2>
+  <div class="bar" role="progressbar" aria-valuenow="${mins}" aria-valuemax="${tot}"><i style="width:${tot?mins/tot*100:0}%"></i></div>
+  <div style="margin-top:12px">${TASKS.length?TASKS.map(t=>`<button class="task" role="checkbox" aria-checked="${done.has(t.id)}" data-task="${t.id}"><span class="box">${done.has(t.id)?'✓':''}</span><span><span class="t">${esc(t.subj)} · ${esc(t.title)}</span><br><span class="d">${t.min}분</span></span></button>`).join(''):'<p class="sub">점검이 필요한 과목이 없어요. 지금처럼 이어가요.</p>'}</div>`;
+}
+function selChips(){
+  const c=k=>COLORS[KEYS.indexOf(k)%COLORS.length],on=k=>st.sel.includes(k);
+  return `<div class="chips" role="group" aria-label="과목 선택">${KEYS.map(k=>`<button data-sel="${k}" aria-pressed="${on(k)}" style="${on(k)?`background:${c(k)};border-color:${c(k)}`:''}">${esc(SUB[k].n)}</button>`).join('')}
+  <button data-selall="1" class="sub" aria-pressed="${st.multi&&st.sel.length===KEYS.length}">전체 보기</button></div>`;
+}
+function sTrend(){
+  const keys=st.sel.filter(k=>SUB[k]),c=commonAvg(),U=ALL().filter(a=>a.prev!=null);
+  const best=[...U].sort((a,b)=>b.span-a.span)[0],worst=[...U].sort((a,b)=>a.urgency-b.urgency)[0];
+  const legend=keys.map(k=>`<span><b style="color:${COLORS[KEYS.indexOf(k)%COLORS.length]}">━</b> ${esc(SUB[k].n)}</span>`).join('')+(st.avg&&keys.length>1?'<span>╌ 응시 과목 평균</span>':keys.length===1?'<span>╌ 내 평균</span>':'');
+  const rows=keys.map(k=>{const a=analyze(k);
+    return `<tr><td>${esc(SUB[k].n)}</td><td>${a.first}</td><td>${a.max}</td><td><b>${a.now}</b></td><td class="${a.span>0?'up':a.span<0?'down':''}">${a.prev==null?'-':sg(a.span)}</td><td>${arrow(a)}</td></tr>`}).join('');
+  return `<h1>점수 추세</h1><p class="sub">${TERMS.length}회 시험 · 과목을 누르면 그래프가 바뀌어요</p>${selChips()}
+  <div class="chart">${keys.length?chart(keys,{avg:st.avg&&keys.length>1,labels:keys.length<=2,ring:keys.length===1}):'<p class="sub" style="padding:24px;text-align:center">과목을 선택하면 그래프가 나와요.</p>'}
+  <div class="legend">${legend}</div></div>
+  <button class="tg" role="switch" aria-checked="${st.multi}" data-multi="1" style="margin-top:6px"><span>여러 과목 겹쳐 보기<br><span class="sub">켜면 과목을 여러 개 골라 비교할 수 있어요</span></span><span class="sw"></span></button>
+  ${keys.length>1?`<button class="tg" role="switch" aria-checked="${st.avg}" data-avg="1"><span>응시 과목 평균선<br><span class="sub">시험마다 응시 과목이 달라 참고용이에요</span></span><span class="sw"></span></button>`:''}
+  ${U.length?`<div class="pen blue"><b>추세 요약</b><br>${best&&best.span>0?`가장 많이 오른 과목은 <mark>${esc(SUB[best.k].n)}</mark>(${best.first}→${best.now}, ${sg(best.span)}점)이에요. `:''}${worst&&worst.urgency<0?`가장 먼저 살펴볼 과목은 <mark>${esc(SUB[worst.k].n)}</mark>(${worst.prev}→${worst.now})이에요.`:'크게 내려간 과목은 없어요.'}${c?` 같은 ${c.ks.length}과목 평균은 ${c.m.toFixed(1)}→${c.f.toFixed(1)}(${c.d>0?'+':''}${c.d.toFixed(1)})이에요.`:''}</div>`:''}
+  <h2>과목별 변화</h2>
+  <table><thead><tr><th>과목</th><th>처음</th><th>최고</th><th>최근</th><th>전체</th><th>직전</th></tr></thead><tbody>${rows}</tbody></table>`;
+}
+function chipsHtml(){return `<div class="chips" role="group" aria-label="과목">${KEYS.map(k=>`<button data-subj="${k}" aria-pressed="${k===st.subj}">${esc(SUB[k].n)}</button>`).join('')}</div>`}
+function sAnalysis(){
+  const k=st.subj,a=analyze(k),bar=arr=>`<div class="stack"><i style="width:${arr[0]}%;background:#1B3FA0"></i><i style="width:${arr[1]}%;background:#FFE15A;border-left:2px solid #1C2230"></i></div>`;
+  return `<h1>성취도 분석</h1>${chipsHtml()}
+  <div class="chart">${chart([k],{labels:true,ring:true})}<div class="legend"><span style="color:#1B3FA0">━ 내 점수</span><span>╌ 내 평균</span></div></div>
+  <div class="pen ${a.level==='rise'||a.level==='steady'?'good':''}"><b>AI 빨간펜</b><br>${coach(k)}</div>
+  ${a.prev==null?'':`<h2>점수가 어디서 왔나</h2>
+  <div class="comp"><span>${esc(TERMS[a.pi])}</span>${bar(a.cp)}<span>${a.cp[0]+a.cp[1]}점</span><span>${esc(TERMS[a.li])}</span>${bar(a.cl)}<span>${a.cl[0]+a.cl[1]}점</span></div>
+  <p class="sub" style="margin-top:6px"><span style="color:#1B3FA0">■</span> 객관식 ${a.cp[0]}→${a.cl[0]}(${sg(a.dO)}) · <span style="background:#FFE15A">■</span> 서술형 ${a.cp[1]}→${a.cl[1]}(${sg(a.dS)}). 배점은 시험마다 다를 수 있어요.</p>`}
+  ${itemsCard(k,a)}
+  ${TRAIT.length?`<h2>학습 성향</h2><div class="trait">${TRAIT.map(([x,y])=>`<div>${esc(x)}<b>${esc(y)}</b></div>`).join('')}</div>`:''}`;
+}
+function sGoal(){
+  const ks=Object.keys(goals);
+  const g=ks.map(k=>{const a=analyze(k),gap=goals[k]-a.now,n=Math.min(5,Math.max(0,Math.ceil(gap/3)));
+    return `<div class="goal"><div class="h"><span>${esc(SUB[k].n)}</span><span>${a.now} → <b style="color:#1B3FA0">${goals[k]}</b></span></div>
+    <input type="range" min="${a.now}" max="100" value="${goals[k]}" data-goal="${k}" aria-label="${esc(SUB[k].n)} 목표 점수">
+    <div class="sub">${gap<=0?'현재 점수를 지키는 목표예요.':`+${gap}점 목표 → 주 ${n}회 ${TIP[SUB[k].t].min}분을 추천해요.`}</div></div>`}).join('');
+  const T=(key,label,d)=>`<button class="tg" role="switch" aria-checked="${share[key]}" data-share="${key}"><span>${label}<br><span class="sub">${d}</span></span><span class="sw"></span></button>`;
+  return `<h1>다음 시험 목표</h1><p class="sub">점수를 직접 정하면 학습 시간이 계산돼요.</p>${g||'<p class="sub">점검이 필요한 과목이 없어요.</p>'}
+  <h2>학부모에게 보여줄 내용</h2><p class="sub">학생이 정한 공개 범위만 학부모 화면에 나와요.</p>
+  ${T('scores','과목별 점수','끄면 성취 수준(A~E)만 보여요')}${T('trend','점수 변화 그래프','끄면 변화 폭 문장만 보여요')}${T('ai','AI 코멘트','끄면 가정 지도 팁만 보여요')}`;
+}
+function itemsCard(k,a){
+  const it=ITEMS[TERMIDS[a.li]+'|'+k];if(!it)return '';
+  const nos=it.wrong.map(x=>x.n).sort((p,q)=>p-q),w=nos.length,b=(it.blank||[]).length;
+  let tail='';
+  if(it.count&&w>=2){const late=nos.filter(n=>n>it.count*0.7).length;if(late/w>=0.5)tail='뒷번호에서 많이 틀렸어요. 시간 배분을 점검해 보세요.'}
+  const ch=it.wrong.filter(x=>x.chosen.length).map(x=>`${x.n}번→${x.chosen.join('·')}`).join(', ');
+  return `<h2>성적표의 틀린 문항</h2><div class="card">틀린 문항 ${w}개${it.count?` (전체 ${it.count}문항)`:''}: ${nos.map(n=>n+'번').join(', ')||'없음'}${b?`<br>비운 문항 ${b}개: ${it.blank.join(', ')}번`:''}${ch?`<br><span class="sub">고른 답: ${esc(ch)}</span>`:''}${tail?`<p class="sub" style="margin-top:6px">${tail}</p>`:''}</div>`;
+}
+/* ===== 성적표 가져오기: 사진 → (파서 또는 직접 입력) → 검산 → 데이터에 추가 ===== */
+const LETTERS={A:'12',B:'13',C:'23',D:'123',E:'14',F:'24',G:'124',H:'34',I:'134',J:'234',K:'1234',L:'15',M:'25',N:'125',O:'35',P:'135',Q:'235',R:'1235',S:'45',T:'145',U:'245',V:'1245',W:'345',X:'1345',Y:'2345',Z:'12345'};
+const typeGuess=n=>/수학/.test(n)?'math':/과학|물리|화학|생물|지구/.test(n)?'sci':/국어|영어|독해|문학/.test(n)?'lang':'memo';
+function newImp(){
+  return {files:[],exam:{label:'',gradeLevel:'',semester:'',kind:'midterm'},
+    rows:DEF().map(k=>({k,name:SUB[k].n,code:SUB[k].code||'',type:SUB[k].t,obj:'',wri:'',perf:'',total:'',count:'',wrong:''})),
+    reported:{sum:'',avg:''},extras:[],checkMsgs:[],msg:'',ok:false,confirm:false,busy:false,newName:'',newType:'lang'};
+}
+const rowEmpty=r=>['obj','wri','perf','total','wrong'].every(f=>String(r[f]).trim()==='');
+/* "5:2, 12:C, 18:?, 20" → 틀린 문항(고른 보기)·비운 문항. 표기는 성적표 범례를 따라요(알파벳은 복수 표기). */
+function parseWrong(s){
+  const wrong=[],blank=[],bad=[];
+  String(s).split(/[\s,;]+/).filter(Boolean).forEach(tok=>{
+    const m=tok.match(/^(\d{1,3})(?::([1-5]{1,5}|[A-Za-z]|\?))?$/);
+    if(!m){bad.push(tok);return}
+    const n=+m[1];if(n<1||n>100){bad.push(tok);return}
+    const c=m[2];
+    if(c==='?'){blank.push(n);return}
+    let ch=[];
+    if(c){const code=/[A-Za-z]/.test(c)?LETTERS[c.toUpperCase()]:c;ch=[...new Set(code.split('').map(Number))].sort()}
+    wrong.push({n,chosen:ch});
+  });
+  return {wrong,blank,bad};
+}
+function checkImp(){
+  const I=st.imp,bad=[];let sum=0,cnt=0;
+  I.rows.forEach(r=>{
+    if(rowEmpty(r))return;
+    const o=+r.obj||0,w=+r.wri||0,p=+r.perf||0,t=o+w+p;sum+=t;cnt++;
+    if(t>100)bad.push(`${r.name}: 객관식+서술형+실기가 100점을 넘어요`);
+    if(String(r.total).trim()!==''&&+r.total!==t)bad.push(`${r.name}: 입력한 합 ${t}점, 성적표 총점 ${r.total}점`);
+    if(String(r.wrong).trim()!==''){const p2=parseWrong(r.wrong);if(p2.bad.length)bad.push(`${r.name}: 읽을 수 없는 표기 ${p2.bad.join(', ')}`)}
+  });
+  if(String(I.reported.sum).trim()!==''&&+I.reported.sum!==sum)bad.push(`합계: 입력한 점수의 합 ${sum}점, 성적표 합계 ${I.reported.sum}점`);
+  if(String(I.reported.avg).trim()!==''&&cnt&&Math.abs(+I.reported.avg-sum/cnt)>0.01)bad.push(`평균: 계산 ${(sum/cnt).toFixed(2)}, 성적표 평균 ${I.reported.avg}`);
+  return {bad,sum,cnt};
+}
+function applyExtraction(j){
+  const I=st.imp;
+  I.exam={label:j.exam.label||'',gradeLevel:j.exam.gradeLevel?String(j.exam.gradeLevel):'',semester:j.exam.semester?String(j.exam.semester):'',kind:j.exam.kind||'midterm'};
+  I.rows=I.rows.filter(r=>r.k).map(r=>({...r,obj:'',wri:'',perf:'',total:'',count:'',wrong:''}));
+  j.subjects.forEach(s=>{
+    let r=I.rows.find(x=>(s.code&&x.code===s.code)||x.name===s.name);
+    if(!r){r={k:null,name:s.name,code:s.code||'',type:typeGuess(s.name),obj:'',wri:'',perf:'',total:'',count:'',wrong:''};I.rows.push(r)}
+    const sv=v=>v==null?'':String(v);
+    r.obj=sv(s.objective);r.wri=sv(s.written);r.perf=sv(s.performance);r.total=sv(s.reportedTotal);r.count=sv(s.itemCount);
+    const parts=(s.wrong||[]).map(w=>w.chosen.length?`${w.n}:${w.chosen.join('')}`:String(w.n)).concat((s.blank||[]).map(n=>`${n}:?`));
+    r.wrong=parts.join(', ');
+  });
+  I.reported={sum:j.reported&&j.reported.sum!=null?String(j.reported.sum):'',avg:j.reported&&j.reported.average!=null?String(j.reported.average):''};
+  I.extras=(j.extras||[]).slice(0,50).map(x=>({label:x.label,value:x.value}));
+}
+async function remoteParse(){
+  const I=st.imp,P=CONFIG.parser;
+  if(P.mode!=='remote'||!P.endpoint)return;
+  if(!I.files.length){I.msg='성적표 사진을 먼저 올려 주세요.';I.ok=false;return render()}
+  I.busy=true;I.msg='읽는 중이에요…';I.ok=true;render();
+  try{
+    const fd=new FormData();I.files.forEach((f,i)=>fd.append('image'+i,f.file,'card'+i));
+    const r=await fetch(P.endpoint,{method:'POST',body:fd,cache:'no-store',credentials:'omit',referrerPolicy:'no-referrer'});
+    if(!r.ok)throw new Error('응답 '+r.status);
+    const j=await r.json(),v=validateExtraction(j);
+    if(v.errors.length){I.msg='읽기 결과의 형식이 맞지 않아요: '+v.errors[0];I.ok=false}
+    else{applyExtraction(j);I.msg='읽었어요. 사진과 비교해서 틀린 곳을 고친 뒤 검산해 주세요.'+(v.warns.length?' ('+v.warns[0]+')':'');I.ok=true;I.checkMsgs=[]}
+  }catch(e){I.msg='자동 읽기에 실패했어요. 직접 입력해 주세요.';I.ok=false}
+  I.busy=false;render();
+}
+function sRecord(){
+  if(!st.imp)st.imp=newImp();
+  const I=st.imp,e=I.exam,P=CONFIG.parser,remote=P.mode==='remote'&&P.endpoint;
+  const viewer=I.files.length?`<details class="dt" open><summary>올린 성적표 보기 (${I.files.length}장)</summary>${I.files.map((f,i)=>f.pdf?`<p class="sub">PDF 파일: ${esc(f.name)}</p>`:`<img class="big" src="${f.url}" alt="성적표 ${i+1}쪽">`).join('')}</details>`:'';
+  const thumbs=I.files.length?`<div class="ths">${I.files.map((f,i)=>`<div class="th">${f.pdf?'<span class="pdf">PDF</span>':`<img src="${f.url}" alt="성적표 ${i+1}쪽">`}<span class="sub">${esc(f.name)}</span><button class="btn small" data-imp-act="rmfile:${i}" aria-label="성적표 ${i+1} 삭제">삭제</button></div>`).join('')}</div>`:'';
+  const rows=I.rows.map((r,i)=>`<div class="srow"><div class="qh"><b>${esc(r.name)}</b>${r.code?`<span class="sub">코드 ${esc(r.code)}</span>`:''}${r.k?'':`<button class="btn small" data-imp-act="rmrow:${i}" aria-label="${esc(r.name)} 삭제">삭제</button>`}</div>
+   <div class="g3"><label>객관식<input inputmode="numeric" data-imp="r:${i}:obj" value="${esc(r.obj)}"></label><label>서술형<input inputmode="numeric" data-imp="r:${i}:wri" value="${esc(r.wri)}"></label><label>실기<input inputmode="numeric" data-imp="r:${i}:perf" value="${esc(r.perf)}"></label></div>
+   <div class="g2"><label>성적표 총점 <span class="sub">(검산용)</span><input inputmode="numeric" data-imp="r:${i}:total" value="${esc(r.total)}"></label><label>전체 문항 수<input inputmode="numeric" data-imp="r:${i}:count" value="${esc(r.count)}"></label></div>
+   <label>틀린 문항 <span class="sub">(번호:고른 답 · 예: 5:2, 12:C, 18:?)</span><input class="in" data-imp="r:${i}:wrong" value="${esc(r.wrong)}" placeholder="예: 5:2, 12:C, 18:?"></label></div>`).join('');
+  const list=TERMS.map((t,i)=>`<div class="fr" style="grid-template-columns:1fr auto"><span><b>${esc(t)}</b> <span class="sub">${KINDS[(EXAMMETA[TERMIDS[i]]||{}).kind]||''}</span></span><button class="btn small" data-del="${i}">${st.del===i?'정말 삭제':'삭제'}</button></div>`).join('');
+  return `<h1>성적표 가져오기</h1><p class="sub">${KEYS.length?'새 성적표를 올리고 값을 확인하면 모든 화면이 바뀌어요.':'첫 성적표를 가져와 주세요.'}</p>
+  ${aiBox()}
+  <div class="slot"><div class="qh"><b>성적표 사진</b><span class="sub">여러 쪽이면 여러 장</span></div>
+   <input id="imp-file" class="vh" type="file" accept="image/*,application/pdf" multiple>
+   <input id="imp-cam" class="vh" type="file" accept="image/*" capture="environment">
+   <div class="btns"><label for="imp-file" class="btn main">${I.files.length?'더 올리기':'성적표 올리기'}</label><label for="imp-cam" class="btn">촬영</label>
+   ${remote?`<button class="btn" data-imp-act="parse" aria-disabled="${I.busy}">자동 읽기</button>`:''}</div>
+   ${thumbs}
+   <p class="sub" style="margin-top:8px">${remote?'자동 읽기를 누르면 사진이 설정된 읽기 서버로 전송돼요. 이름이 보이면 가려서 올려 주세요.':'자동 읽기는 연결되어 있지 않아요. 사진을 보면서 아래 표를 채워 주세요. 이름·학번은 입력하지 않아요.'}</p></div>
+  ${viewer}
+  <div class="card"><b>시험 정보</b>
+   <label class="lb">시험 이름<input class="in" data-imp="exam.label" value="${esc(e.label)}" maxlength="16" placeholder="예: 3-2 기말"></label>
+   <div class="g3"><label>학년<input inputmode="numeric" data-imp="exam.gradeLevel" value="${esc(e.gradeLevel)}" placeholder="3"></label>
+    <label>학기<select data-imp="exam.semester"><option value="">-</option><option value="1" ${e.semester==='1'?'selected':''}>1학기</option><option value="2" ${e.semester==='2'?'selected':''}>2학기</option></select></label>
+    <label>종류<select data-imp="exam.kind">${Object.entries(KINDS).map(([k,v])=>`<option value="${k}" ${e.kind===k?'selected':''}>${v}</option>`).join('')}</select></label></div></div>
+  <h2>과목별 점수</h2><p class="sub">응시한 과목만 채우세요. 비워 둔 과목은 건너뛰어요.</p>
+  ${rows}
+  <div class="card"><b>과목 추가</b>
+   <div class="g2"><label>과목 이름<input class="in" style="margin:0" data-imp="newName" value="${esc(I.newName)}" maxlength="10"></label>
+   <label>유형<select data-imp="newType">${Object.entries(TYPES).map(([k,v])=>`<option value="${k}" ${I.newType===k?'selected':''}>${v}</option>`).join('')}</select></label></div>
+   <button class="btn small" style="margin-top:8px" data-imp-act="addrow">과목 추가</button></div>
+  <div class="card"><b>성적표의 합계·평균 <span class="sub">(검산용, 선택)</span></b>
+   <div class="g2"><label>총점 합계<input inputmode="decimal" data-imp="rep.sum" value="${esc(I.reported.sum)}"></label><label>평균<input inputmode="decimal" data-imp="rep.avg" value="${esc(I.reported.avg)}"></label></div></div>
+  ${I.extras.length?`<div class="pen blue"><b>형식에 없는 항목 ${I.extras.length}개</b><br>${I.extras.map(x=>esc(x.label)).join(', ')}. 데이터에 따로 보관하고, 다음 형식 개정에 참고해요.</div>`:''}
+  ${I.checkMsgs.length?`<div class="pen"><b>검산에서 차이가 있어요</b><ul class="errs">${I.checkMsgs.map(m=>`<li>${esc(m)}</li>`).join('')}</ul></div>`:''}
+  <p class="${I.ok?'up':'down'}" role="status" style="margin-top:8px;font-size:13.5px">${esc(I.msg)}</p>
+  <div class="btns"><button class="btn" data-imp-act="check">검산</button><button class="btn main" data-imp-act="commit">${I.confirm?'그래도 가져오기':'가져오기'}</button><button class="btn" data-imp-act="reset">처음부터</button></div>
+  ${TERMS.length?`<h2>가져온 시험</h2>${list}`:''}
+  <h2>보관</h2><p class="sub">가져온 내용은 창을 닫으면 사라져요. 보관하려면 파일로 받아 두세요.</p>
+  <div class="btns"><button class="btn" data-d="export">현재 데이터 받기</button></div>`;
+}
+function commitImp(){
+  const I=st.imp,e=I.exam,fail=m=>{I.msg=m;I.ok=false;render()};
+  const label=e.label.trim();
+  if(!label)return fail('시험 이름을 입력해 주세요.');
+  if(piiHit(label))return fail(`${piiHit(label)}처럼 보이는 글은 쓸 수 없어요.`);
+  if(TERMS.includes(label))return fail('같은 이름의 시험이 이미 있어요. 이름을 바꿔 주세요.');
+  const gl=String(e.gradeLevel).trim();
+  if(gl!==''&&!(/^\d{1,2}$/.test(gl)&&+gl>=1&&+gl<=12))return fail('학년은 1~12 사이 숫자로 적어 주세요.');
+  const rows=I.rows.filter(r=>!rowEmpty(r));
+  if(!rows.length)return fail('응시한 과목의 점수를 하나 이상 입력해 주세요.');
+  for(const r of rows){
+    for(const [f,l] of [['obj','객관식'],['wri','서술형'],['perf','실기'],['total','총점']]){
+      const v=String(r[f]).trim();if(v!==''&&!(/^\d{1,3}$/.test(v)&&+v<=100))return fail(`${r.name}의 ${l} 점수는 0~100 사이 정수로 적어 주세요.`);
+    }
+    const c=String(r.count).trim();if(c!==''&&!(/^\d{1,3}$/.test(c)&&+c>=1&&+c<=100))return fail(`${r.name}의 문항 수는 1~100 사이 정수로 적어 주세요.`);
+    if(String(r.wrong).trim()!==''){const p=parseWrong(r.wrong);if(p.bad.length)return fail(`${r.name}: 읽을 수 없는 표기가 있어요 (${p.bad.join(', ')})`)}
+    if(piiHit(r.name))return fail(`${piiHit(r.name)}처럼 보이는 글은 쓸 수 없어요.`);
+  }
+  const ck=checkImp();I.checkMsgs=ck.bad;
+  if(ck.bad.length&&!I.confirm){I.confirm=true;return fail('검산에서 차이가 발견됐어요. 사진과 다시 비교해 보고, 그래도 맞다면 한 번 더 눌러 주세요.')}
+  const backup=JSON.stringify(toData());
+  let n=TERMS.length+1;while(TERMIDS.includes('t'+n))n++;
+  const id='t'+n,meta={kind:e.kind};
+  if(gl!=='')meta.gradeLevel=+gl;if(e.semester)meta.semester=+e.semester;
+  const rs=String(I.reported.sum).trim(),ra=String(I.reported.avg).trim();
+  if(rs!==''||ra!==''){meta.reported={};if(rs!=='')meta.reported.sum=+rs;if(ra!=='')meta.reported.average=+ra}
+  TERMS.push(label);TERMIDS.push(id);EXAMMETA[id]=meta;
+  for(const k of DEF()){SUB[k].c.push(null);SUB[k].perf.push(null);SUB[k].rep.push(null)}
+  const i=TERMIDS.length-1;
+  rows.forEach(r=>{
+    let k=r.k;
+    if(!k){let m=DEF().length+1;while(SUB['s'+m])m++;k='s'+m;SUB[k]=newSub(r.name,r.type,r.code)}
+    SUB[k].c[i]=[+r.obj||0,+r.wri||0];
+    if(String(r.perf).trim()!=='')SUB[k].perf[i]=+r.perf;
+    if(String(r.total).trim()!=='')SUB[k].rep[i]=+r.total;
+    if(r.code&&!SUB[k].code)SUB[k].code=r.code;
+    if(String(r.wrong).trim()!==''||String(r.count).trim()!==''){
+      const p=parseWrong(r.wrong),it={exam:id,subject:k,wrong:p.wrong};
+      if(String(r.count).trim()!=='')it.count=+r.count;if(p.blank.length)it.blank=p.blank;ITEMS[id+'|'+k]=it;
+    }
+  });
+  I.extras.forEach(x=>EXTRAS.push({exam:id,label:x.label,value:x.value}));
+  const v=validate(toData());
+  if(v.errors.length){applyData(JSON.parse(backup));st.tab='record';st.imp=newImp();st.imp.msg='가져오지 못했어요: '+v.errors[0];return render()}
+  const files=I.files;dirty=true;rebuild();
+  st.imp=newImp();st.imp.files=files;st.imp.msg=`${label}을(를) 가져왔어요.`;st.imp.ok=true;
+  render();
+}
+function delExam(i){
+  if(CLASS&&CLASS.termIds.includes(TERMIDS[i])){st.del=-1;st.imp=st.imp||newImp();st.imp.msg='학급 비교에 쓰이는 시험은 삭제할 수 없어요.';st.imp.ok=false;return render()}
+  if(st.del!==i){st.del=i;return render()}
+  const id=TERMIDS[i];
+  TERMS.splice(i,1);TERMIDS.splice(i,1);delete EXAMMETA[id];
+  for(const k of DEF()){SUB[k].c.splice(i,1);SUB[k].perf.splice(i,1);SUB[k].rep.splice(i,1)}
+  for(const key of Object.keys(ITEMS))if(key.startsWith(id+'|'))delete ITEMS[key];
+  EXTRAS=EXTRAS.filter(x=>x.exam!==id);
+  st.del=-1;dirty=true;rebuild();st.imp=newImp();st.imp.msg='삭제했어요.';st.imp.ok=true;render();
+}
+
+/* ===== 7. 학부모·교사 화면 ===== */
+function pView(){
+  const U=byUrgency().filter(a=>!a.stale),good=U.filter(a=>a.level==='rise'||a.level==='steady').slice(-2).reverse(),need=U.filter(a=>a.level==='focus'||a.level==='watch').slice(0,2);
+  const rowOf=k=>{const a=analyze(k);return `<tr><td>${esc(SUB[k].n)}</td><td>${share.scores?a.now+'점':'비공개 · '+lvl(a.now)+'수준'}</td><td>${arrow(a)}</td></tr>`};
+  return `<h1>${esc(META.student)}의 학습 소식</h1><p class="sub">${esc(TERMS[TERMS.length-1])} 결과 · 학부모용 요약</p>
+  ${good.length?`<div class="pen good"><b>잘하고 있는 점</b><br>${good.map(a=>coach(a.k).split(' 다음 한 걸음')[0]).join('<br>')}</div>`:''}
+  <div class="pen blue"><b>함께 살펴볼 점</b><br>${need.length?need.map(a=>esc(parentText(a.k))).join('<br><br>'):'이번에는 크게 내려간 과목이 없어요. 노력한 점을 칭찬해 주세요.'}</div>
+  <h2>과목별 흐름</h2>
+  <table><thead><tr><th>과목</th><th>${share.scores?'점수':'수준'}</th><th>변화</th></tr></thead><tbody>${KEYS.map(rowOf).join('')}</tbody></table>
+  ${share.trend?`<div class="chart" style="margin-top:12px">${chart(KEYS,{avg:true})}<div class="legend">${KEYS.map(k=>`<span><b style="color:${COLORS[KEYS.indexOf(k)%COLORS.length]}">━</b> ${esc(SUB[k].n)}</span>`).join('')}<span>╌ 평균</span></div></div>`:'<p class="sub" style="margin-top:8px">그래프는 학생이 비공개로 설정했어요.</p>'}
+  ${scheduleCard(false)}
+  <h2>이번 주 대화 질문</h2>
+  <div class="q">이번 시험에서 가장 어려웠던 문제는 뭐였어?</div>
+  <div class="q">지난번보다 잘된 공부 방법이 있었어?</div>
+  <div class="q">내가 도와줄 수 있는 게 있을까?</div>
+  <p class="sub" style="margin-top:10px">점수 비교나 등수 이야기는 피하고, 질문으로 시작해 주세요.${share.ai?'':' (AI 코멘트는 학생이 비공개로 설정했어요.)'}</p>`;
+}
+const FL={focus:'집중 점검',watch:'살펴보기',ok:'양호'};
+function tView(){
+  if(!CLASS)return `<h1>학급 모니터링</h1><div class="pen blue"><b>학급 데이터가 없어요</b><br>데이터 파일에 <code>class</code> 항목이 있으면 학급 화면이 나와요. 형식은 "데이터" 화면에서 볼 수 있어요.</div>`;
+  const ids=Object.keys(CLASS.students[0].s),L=CLASS.labels,last=a=>a[a.length-1],dl=a=>a[a.length-1]-a[a.length-2];
+  const flagOf=r=>{const ds=ids.map(i=>r.s[i]?dl(r.s[i]):0),min=Math.min(...ds),sum=ds.reduce((x,y)=>x+y,0),drops=ds.filter(d=>d<=-5).length,neg=ds.filter(d=>d<0).length;
+    return (min<=-10||drops>=3)?'focus':(min<=-5||(neg>=3&&sum<=-8))?'watch':'ok'};
+  const rank={focus:0,watch:1,ok:2},rows=[...CLASS.students].sort((a,b)=>rank[flagOf(a)]-rank[flagOf(b)]);
+  const cnt={focus:0,watch:0,ok:0};CLASS.students.forEach(r=>cnt[flagOf(r)]++);
+  const r=rows[st.pick]||rows[0],fl=flagOf(r);
+  const nm=i=>SUB[i]?SUB[i].n:i;
+  const ds=ids.filter(i=>r.s[i]).map(i=>[i,dl(r.s[i])]).sort((a,b)=>a[1]-b[1]),w=ds[0];
+  const act=fl==='ok'?`특이사항이 없어요. 심화 과제를 제안해도 좋아요.`
+   :`${esc(nm(w[0]))} 점수가 직전 시험보다 ${-w[1]}점 내려갔어요.${ds.filter(x=>x[1]<=-5).length>=3?' 여러 과목이 함께 내려가 학습 환경 점검이 필요해요.':' 한 과목의 흐름이라 <mark>5분 면담</mark>으로 원인을 먼저 확인해요.'}`;
+  const msg=fl==='ok'?'':`[학부모 안내 초안]\n안녕하세요. 이번 ${L[L.length-1]} 결과에서 ${nm(w[0])} 과목이 직전보다 조금 내려갔어요. 아직 걱정할 단계는 아니고, 어떤 유형에서 점수를 놓쳤는지 함께 확인하려 해요. 가정에서는 "어떤 문제가 가장 어려웠어?"라고 물어봐 주세요.`;
+  const cell=(q,i)=>{if(!q.s[i])return '-';const d=dl(q.s[i]);return `${last(q.s[i])} <span class="${d<=-5?'down':d>=5?'up':'sub'}">${d>0?'▲':d<0?'▼':'―'}${Math.abs(d)||''}</span>`};
+  return `<h1>${esc(CLASS.alias)} 모니터링</h1><p class="sub">학생 ${CLASS.students.length}명 · ${esc(L[L.length-2])} → ${esc(L[L.length-1])}${META.synthetic?' · 가상 데이터':''}</p>
+  <div class="trait" style="grid-template-columns:repeat(3,1fr);margin-top:12px">
+   <div>집중 점검<b style="color:#D3263F">${cnt.focus}명</b></div><div>살펴보기<b>${cnt.watch}명</b></div><div>양호<b style="color:#1E8A5A">${cnt.ok}명</b></div></div>
+  <div class="scroll"><table><thead><tr><th>학생</th>${ids.map(i=>`<th>${esc(nm(i))}</th>`).join('')}<th>상태</th></tr></thead><tbody>
+  ${rows.map((q,i)=>{const f=flagOf(q);return `<tr class="${i===st.pick?'pick':''}" data-pick="${i}" tabindex="0"><td>${esc(q.n)}</td>${ids.map(id=>`<td>${cell(q,id)}</td>`).join('')}<td><span class="flag ${f==='ok'?'ok':f==='watch'?'watch':''}">${FL[f]}</span></td></tr>`}).join('')}</tbody></table></div>
+  <div class="pen"><b>${esc(r.n)} · AI 제안</b><br>${act}</div>
+  ${msg?`<div class="draft" id="draft">${esc(msg)}</div><button class="btn" data-copy="1">초안 복사</button>`:''}`;
+}
+
+/* ===== 8. 시험지 분석 (시험지·답안지·정답지 업로드) ===== */
+const SLOTS=[
+ {k:'exam',label:'시험지',desc:'문제가 인쇄된 시험지 사진·PDF'},
+ {k:'ans',label:'답안지',desc:'학생이 푼 답이 보이는 사진·PDF'},
+ {k:'key',label:'정답지',desc:'공식 정답표 (없으면 건너뛰어도 돼요)'}
+];
+const ETYPES=['개념 혼동','계산 실수','문제 해석','조건 확인 부족','시간 부족'];
+const ETIP={
+ '개념 혼동':{step:'교과서 개념을 다시 정리하고 예제 3문제 풀기',min:25},
+ '계산 실수':{step:'풀이를 한 줄씩 쓰며 다시 풀고 검산하기',min:20},
+ '문제 해석':{step:'조건에 밑줄 치고 "구하는 것"을 먼저 쓰기',min:15},
+ '조건 확인 부족':{step:'지문 조건에 번호를 매기고 선지에 하나씩 적용하기',min:20},
+ '시간 부족':{step:'시간을 재고 문항별 시간 배분 연습하기',min:20},
+ '':{step:'틀린 이유를 먼저 분류하고 개념 복습하기',min:20}
+};
+function mkRows(n,old){return Array.from({length:n},(_,i)=>old&&old[i]?old[i]:{mine:null,key:null,unit:'',type:''})}
+function exFrom(a){
+  return {title:a.title,
+   qs:a.questions.map(q=>({no:q.no,pts:q.points,topic:q.topic||'',stu:q.studentAnswer==null?null:q.studentAnswer,stuC:q.studentAnswerConfidence||'보통',key:q.key,keyC:q.keyConfidence||'보통',trace:q.trace||'',why:q.why||''})),
+   tasks:(a.tasks||[]).map(t=>({q:t.q,t:t.text,min:t.minutes,onlyWrong:t.onlyWrongAtLeast||0})),
+   strength:(a.coaching&&a.coaching.strength)||'',pattern:(a.coaching&&a.coaching.pattern)||''};
+}
+function exGrade(q){
+  const m=(q.no in st.ex.mine)?st.ex.mine[q.no]:q.stu,off=st.ex.official[q.no],key=off||q.key,sure=!!off;
+  return {mine:m,key,sure,res:m==null?'check':m===key?'ok':'x'};
+}
+function exView(){
+  const v=st.ex.view;
+  return v==='sample'?exSample():v==='entry'?exEntry():v==='result'?exResult():exHome();
+}
+function exHome(){
+  const E=st.ex;
+  const slot=s=>{const fs=E.files[s.k];
+    return `<div class="slot"><div class="qh"><b>${s.label}</b><span class="sub">${s.desc}</span></div>
+    <input id="u-${s.k}" class="vh" type="file" accept="image/*,application/pdf" multiple>
+    <input id="u-${s.k}-cam" class="vh" type="file" accept="image/*" capture="environment">
+    <div class="btns"><label for="u-${s.k}" class="btn main">${fs.length?'파일 더 올리기':s.label+' 올리기'}</label><label for="u-${s.k}-cam" class="btn">촬영</label></div>
+    ${fs.length?`<div class="ths">${fs.map((f,i)=>`<div class="th">${f.pdf?'<span class="pdf">PDF</span>':`<img src="${f.url}" alt="${s.label} ${i+1}쪽">`}<span class="sub">${esc(f.name)}</span><button class="btn small" data-ex-rm="${s.k}:${i}" aria-label="${s.label} ${i+1} 삭제">삭제</button></div>`).join('')}</div>`:'<p class="sub" style="margin-top:6px">아직 올린 파일이 없어요.</p>'}</div>`};
+  const ready=E.files.exam.length&&E.files.ans.length;
+  return `<h1>시험지 분석</h1><p class="sub">시험지, 답안지, 정답지를 따로 올려 주세요. 여러 쪽이면 여러 장을 올릴 수 있어요.</p>
+  ${SLOTS.map(slot).join('')}
+  <button class="btn ${ready?'main':''}" data-ex="start" aria-disabled="${!ready}">분석 시작</button>
+  <p id="ex-msg" class="down" role="status" style="font-size:13.5px">${esc(E.msg||'')}</p>
+  <div class="pen blue"><b>지금은 이렇게 동작해요</b><br>이 프로토타입은 올린 사진을 직접 읽지 못해요. 분석을 시작하면 사진을 보면서 답을 입력하는 화면이 나오고, 입력한 값으로 채점과 코칭을 해요. 서비스에서는 AI가 사진을 읽어 이 표를 먼저 채워줘요. 사진은 이 화면에서만 보이고 저장하거나 보내지 않아요.</div>
+  ${aiBox()}
+  ${EXAMS.length?`<h2>예시</h2>${EXAMS.map((a,i)=>`<button class="card" style="width:100%;text-align:left;display:block" data-ex="open" data-ex-i="${i}"><b>${esc(a.title)}</b><br><span class="sub">AI가 읽은 결과를 담은 예시</span></button>`).join('')}`:''}`;
+}
+function exSample(){
+  const E=st.ex;EX=exFrom(EXAMS[E.i]);
+  const g=EX.qs.map(q=>({q,...exGrade(q)}));
+  const ok=g.filter(x=>x.res==='ok').reduce((t,x)=>t+x.q.pts,0),chk=g.filter(x=>x.res==='check').length;
+  const total=EX.qs.reduce((t,q)=>t+q.pts,0),sure=g.filter(x=>x.sure).length,nx=g.filter(x=>x.res==='x').length;
+  const label={ok:['맞음',' ok'],x:['틀림',''],check:['확인 필요',' watch']};
+  const opts=sel=>[1,2,3,4,5].map(n=>`<option value="${n}" ${sel===n?'selected':''}>${n}번</option>`).join('');
+  const cards=g.map(x=>{const q=x.q,l=label[x.res];
+    return `<div class="qc"><div class="qh"><b>${q.no}번</b><span class="sub">${esc(q.topic)} · ${q.pts}점</span><span class="flag${l[1]}">${l[0]}${x.res!=='check'&&!x.sure?' (임시)':''}</span></div>
+    <div class="sel2"><label>내가 고른 답<select data-ex-mine="${q.no}" aria-label="${q.no}번 내가 고른 답"><option value="">모르겠어요</option>${opts(x.mine)}</select><span class="sub">AI 읽기: ${esc(q.stuC)}</span></label>
+    <label>공식 정답<select data-ex-off="${q.no}" aria-label="${q.no}번 공식 정답"><option value="">아직 몰라요</option>${opts(E.official[q.no])}</select><span class="sub">${x.sure?'입력한 정답으로 채점':`AI 임시 정답 ${q.key}번 (확신: ${esc(q.keyC)})`}</span></label></div>
+    <p class="trace">풀이 흔적: ${esc(q.trace)}</p>
+    ${x.res==='x'?`<div class="pen"><b>왜 틀렸을까${x.sure?'':' (AI 풀이 기준)'}</b><br>${esc(q.why)}</div>`:x.res==='check'?`<div class="pen blue"><b>확인해 주세요</b><br>AI가 선택한 답을 읽지 못했어요. 위에서 내가 고른 답을 선택하면 채점돼요.</div>`:''}</div>`}).join('');
+  const pattern=nx>=2&&EX.pattern?EX.pattern:nx>=1?'틀린 문항의 풀이 흔적을 살펴보고 어느 단계에서 놓쳤는지 확인해요.':'틀린 문항이 없어요. 지금 풀이 방식을 이어가요.';
+  const list=EX.tasks.map((t,i)=>({...t,i})).filter(t=>{if(t.q===0)return !t.onlyWrong||nx>=t.onlyWrong;const x=g.find(y=>y.q.no===t.q);return !x||x.res!=='ok'});
+  let day=1,acc=0;list.forEach(t=>{if(acc>0&&acc+t.min>40){day++;acc=0}t.day=day;acc+=t.min});
+  const dl=off=>{const d=new Date();d.setDate(d.getDate()+off);return `${d.getMonth()+1}/${d.getDate()}(${'일월화수목금토'[d.getDay()]})`};
+  const days={};list.forEach(t=>{(days[t.day]=days[t.day]||[]).push(t)});
+  const tot=list.reduce((s,t)=>s+t.min,0),dn=list.filter(t=>E.done[t.i]).reduce((s,t)=>s+t.min,0);
+  const plan=Object.entries(days).map(([d,arr])=>`<div class="day"><b>${dl(+d)}</b> <span class="sub">${arr.reduce((s,t)=>s+t.min,0)}분</span>${arr.map(t=>`<button class="task" role="checkbox" aria-checked="${!!E.done[t.i]}" data-ex-task="${t.i}"><span class="box">${E.done[t.i]?'✓':''}</span><span><span class="t">${esc(t.t)}</span><br><span class="d">${t.min}분</span></span></button>`).join('')}</div>`).join('');
+  return `<button class="btn small" data-ex="close" style="margin:0 0 8px">← 올리기 화면</button><h1>${esc(EX.title)}</h1>
+  <p class="sub">정오 ${g.length-chk}문항 채점 · 틀림 ${nx}개 · 맞은 점수 ${ok}/${total}점${chk?` · 확인 필요 ${chk}개`:''}</p>
+  <div class="pen blue"><b>정답표가 없어서 임시로 채점했어요</b><br>공식 정답 ${sure}/${g.length}개 입력됨. 문항마다 공식 정답을 선택하면 다시 채점해요. AI가 푼 정답은 틀릴 수 있어서, 임시 채점은 꼭 확인해야 해요.</div>
+  ${cards}
+  <div class="pen"><b>AI 빨간펜</b><br>${EX.strength?'잘한 점: '+esc(EX.strength)+'<br>':''}${esc(pattern)}</div>
+  <h2>보강 계획 (${dn}/${tot}분)</h2>
+  <div class="bar" role="progressbar" aria-valuenow="${dn}" aria-valuemax="${tot}"><i style="width:${tot?dn/tot*100:0}%"></i></div>
+  <p class="sub" style="margin-top:6px">하루 40분 안에서, 한 번에 25분 이하로 나눴어요.</p>${plan}
+  <button class="btn" data-ex="reset">입력한 답 모두 지우기</button>`;
+}
+function exEntry(){
+  const E=st.ex,opts=s=>[1,2,3,4,5].map(n=>`<option value="${n}" ${s===n?'selected':''}>${n}</option>`).join('');
+  const viewer=SLOTS.map(s=>{const fs=E.files[s.k];return fs.length?`<details class="dt"><summary>${s.label} 보기 (${fs.length}장)</summary>${fs.map((f,i)=>f.pdf?`<p class="sub">PDF 파일: ${esc(f.name)}</p>`:`<img class="big" src="${f.url}" alt="${s.label} ${i+1}쪽">`).join('')}</details>`:''}).join('');
+  const rows=E.rows.map((r,i)=>`<div class="er"><b>${i+1}번</b>
+   <select data-exr="${i}:mine" aria-label="${i+1}번 내가 고른 답"><option value="">내 답</option>${opts(r.mine)}</select>
+   <select data-exr="${i}:key" aria-label="${i+1}번 정답"><option value="">정답</option>${opts(r.key)}</select></div>`).join('');
+  return `<button class="btn small" data-ex="close" style="margin:0 0 8px">← 올리기 화면</button><h1>답 입력</h1>
+  <p class="sub">사진을 보면서 문항마다 내 답과 정답을 골라 주세요. 정답을 모르면 비워 둬도 돼요.</p>
+  ${viewer}
+  <div class="fr" style="grid-template-columns:auto 90px 1fr;margin-top:12px"><label for="ex-n">문항 수</label><input id="ex-n" type="number" min="1" max="60" inputmode="numeric" value="${E.n}"><span class="sub">주관식은 제외해요</span></div>
+  <div class="er head"><span></span><span>내 답</span><span>정답</span></div>${rows}
+  <button class="btn main" data-ex="toresult" style="margin-top:12px">채점하고 분석하기</button>`;
+}
+function exResultData(){
+  const E=st.ex,rows=E.rows.map((r,i)=>({no:i+1,...r}));
+  const graded=rows.filter(r=>r.mine&&r.key),ok=graded.filter(r=>r.mine===r.key),wr=graded.filter(r=>r.mine!==r.key),unk=rows.filter(r=>!(r.mine&&r.key));
+  const G={};
+  wr.forEach(r=>{const u=(r.unit||'').trim()||'단원 미입력';const o=G[u]=G[u]||{u,nos:[],types:{}};o.nos.push(r.no);o.types[r.type]=(o.types[r.type]||0)+1});
+  const groups=Object.values(G).sort((a,b)=>b.nos.length-a.nos.length),tasks=[];
+  groups.slice(0,3).forEach(o=>{
+    const top=Object.entries(o.types).sort((a,b)=>b[1]-a[1])[0][0],tip=ETIP[top];
+    tasks.push({t:`${o.u}: ${tip.step}`,min:tip.min});
+    tasks.push({t:`${o.u}: 틀린 ${o.nos.map(n=>n+'번').join(', ')} 다시 풀기`,min:Math.min(25,5+5*o.nos.length)});
+  });
+  if(unk.length)tasks.push({t:`채점하지 못한 ${unk.length}문항을 정답지로 채점하기`,min:10});
+  if(wr.length)tasks.push({t:'해설을 보고 틀린 이유를 오답 노트에 적기',min:15});
+  let day=1,acc=0;tasks.forEach(k=>{if(acc>0&&acc+k.min>40){day++;acc=0}k.day=day;acc+=k.min});
+  return {rows,graded,ok,wr,unk,groups,tasks};
+}
+function exResult(){
+  const E=st.ex,R=exResultData();
+  if(!R.graded.length)return `<button class="btn small" data-ex="back" style="margin:0 0 8px">← 답 입력</button><h1>채점 결과</h1><div class="pen blue"><b>채점할 문항이 없어요</b><br>내 답과 정답이 모두 입력된 문항이 있어야 채점할 수 있어요. 답 입력 화면으로 돌아가 입력해 주세요.</div>`;
+  const pct=Math.round(R.ok.length/R.graded.length*100);
+  const wrRows=R.wr.map(r=>`<div class="wr"><b>${r.no}번</b><span class="sub">내 답 ${r.mine} → 정답 ${r.key}</span>
+   <input class="in" data-exr="${r.no-1}:unit" value="${esc(r.unit)}" maxlength="30" placeholder="단원·개념 (예: 근로기준법)" aria-label="${r.no}번 단원">
+   <select data-exr="${r.no-1}:type" aria-label="${r.no}번 틀린 이유"><option value="">틀린 이유</option>${ETYPES.map(t=>`<option ${r.type===t?'selected':''}>${t}</option>`).join('')}</select></div>`).join('');
+  const top=R.groups[0],topType=top?Object.entries(top.types).sort((a,b)=>b[1]-a[1])[0][0]:'';
+  const pen=!R.wr.length?'틀린 문항이 없어요. 지금 풀이 방식을 이어가요.'
+   :`틀린 ${R.wr.length}문항 중 <mark>${esc(top.u)}</mark>에서 ${top.nos.length}개(${top.nos.map(n=>n+'번').join(', ')})를 놓쳤어요.${topType?` 가장 많은 이유는 <mark>${topType}</mark>이에요.`:' 단원과 틀린 이유를 적으면 보강 방법이 구체적으로 바뀌어요.'}`;
+  const days={};R.tasks.forEach((t,i)=>{(days[t.day]=days[t.day]||[]).push([t,i])});
+  const dl=off=>{const d=new Date();d.setDate(d.getDate()+off);return `${d.getMonth()+1}/${d.getDate()}(${'일월화수목금토'[d.getDay()]})`};
+  const tot=R.tasks.reduce((s,t)=>s+t.min,0),dn=R.tasks.filter((t,i)=>E.done2[i]).reduce((s,t)=>s+t.min,0);
+  const plan=Object.entries(days).map(([d,arr])=>`<div class="day"><b>${dl(+d)}</b> <span class="sub">${arr.reduce((s,x)=>s+x[0].min,0)}분</span>${arr.map(([t,i])=>`<button class="task" role="checkbox" aria-checked="${!!E.done2[i]}" data-ex-task2="${i}"><span class="box">${E.done2[i]?'✓':''}</span><span><span class="t">${esc(t.t)}</span><br><span class="d">${t.min}분</span></span></button>`).join('')}</div>`).join('');
+  return `<button class="btn small" data-ex="back" style="margin:0 0 8px">← 답 입력</button><h1>채점 결과</h1>
+  <p class="sub">${R.graded.length}문항 채점 · 맞음 ${R.ok.length} · 틀림 ${R.wr.length} · 정답률 ${pct}%${R.unk.length?` · 채점 못함 ${R.unk.length}`:''}</p>
+  ${R.unk.length?`<div class="pen blue"><b>정답이나 내 답이 비어 있는 문항이 ${R.unk.length}개 있어요</b><br>${R.unk.map(r=>r.no+'번').join(', ')}은 채점에서 빠졌어요.</div>`:''}
+  <div class="pen"><b>AI 빨간펜</b><br>${pen}</div>
+  ${R.wr.length?`<h2>틀린 문항 (단원·이유 적기)</h2>${wrRows}<button class="btn" data-ex="regroup">분석 다시 하기</button>`:''}
+  <h2>보강 계획 (${dn}/${tot}분)</h2>
+  <div class="bar" role="progressbar" aria-valuenow="${dn}" aria-valuemax="${tot}"><i style="width:${tot?dn/tot*100:0}%"></i></div>
+  <p class="sub" style="margin-top:6px">하루 40분 안에서, 한 번에 25분 이하로 나눴어요.</p>${plan||'<p class="sub">필요한 보강이 없어요.</p>'}`;
+}
+
+/* ===== 학사 일정 · AI 결과 가져오기 · 암호화 ===== */
+function isDate(s){const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(s);if(!m)return false;const d=new Date(+m[1],+m[2]-1,+m[3]);return d.getFullYear()===+m[1]&&d.getMonth()===+m[2]-1&&d.getDate()===+m[3]}
+function dday(s){const t=new Date(isoToday()+'T00:00:00'),d=new Date(s+'T00:00:00');return Math.round((d-t)/86400000)}
+function scheduleCard(edit){
+  const list=SCHEDULE.map((e,i)=>({e,i})).filter(x=>dday(x.e.endDate||x.e.date)>=0).sort((a,b)=>a.e.date<b.e.date?-1:a.e.date>b.e.date?1:0).slice(0,4);
+  if(!list.length)return edit?'<h2>다가오는 일정</h2><p class="sub">등록된 일정이 없어요. Claude에게 학교 학사 일정을 찾아 달라고 한 뒤, 결과를 "AI 결과 가져오기"에 붙여 넣어 주세요.</p>':'';
+  const md=s=>s.slice(5).replace('-','/');
+  return `<h2>다가오는 일정</h2>${list.map(({e,i})=>{
+    const dd=dday(e.date),lab=dd>0?`D-${dd}`:dd===0?'오늘':'진행 중';
+    return `<div class="ev"><span class="dd">${lab}</span><span><b>${esc(e.title)}</b> <span class="tag">${SCAT[e.category]}</span><br><span class="sub">${md(e.date)}${e.endDate?' ~ '+md(e.endDate):''}${e.confirmed?'':' · AI가 수집, 확인 필요'}</span></span>${edit?`<span class="evb">${e.confirmed?'':`<button class="btn small" data-sch="ok:${i}">맞아요</button>`}<button class="btn small" data-sch="del:${i}" aria-label="일정 삭제">삭제</button></span>`:''}</div>`}).join('')}`;
+}
+/* Claude 앱 등 AI 도구가 만든 결과를 붙여 넣어 가져와요. 형식: {"kind":..., "schemaVersion":3, "payload":...} */
+function aiBox(){
+  return `<div class="card"><b>AI 결과 가져오기</b><p class="sub">Claude 앱이 만들어 준 결과(JSON)를 붙여 넣어 주세요. 성적표, 학사 일정, 시험지 판정 결과를 알아서 구분해요.</p>
+  <textarea id="ai-text" class="in" rows="4" placeholder='{"kind":"reportCard", ...}' aria-label="AI 결과 붙여넣기">${esc(st.aiText||'')}</textarea>
+  <div class="btns"><button class="btn small" data-ai="paste">클립보드에서 붙여넣기</button><button class="btn main small" data-ai="go">가져오기</button></div>
+  <p class="${st.aiOk?'up':'down'}" role="status" style="font-size:13.5px;margin-top:6px">${esc(st.aiMsg||'')}</p></div>`;
+}
+function handleAI(raw){
+  const fail=m=>{st.aiMsg=m;st.aiOk=false;render()},win=m=>{st.aiMsg=m;st.aiOk=true;st.aiText='';render()};
+  let j;
+  try{j=JSON.parse(String(raw).trim().replace(/^```(?:json)?\s*/i,'').replace(/\s*```$/,''))}
+  catch(e){return fail('JSON 형식이 아니에요. Claude가 준 결과를 처음부터 끝까지 그대로 붙여 넣어 주세요.')}
+  if(!j||typeof j!=='object'||typeof j.kind!=='string'||!j.payload||typeof j.payload!=='object')return fail('kind와 payload가 있는 결과가 아니에요.');
+  if(Number.isInteger(j.schemaVersion)&&j.schemaVersion>VERSION)return fail(`더 새로운 형식(v${j.schemaVersion})이에요. 프로그램을 업데이트해 주세요(지금 v${VERSION}).`);
+  if(!DATA)return fail('먼저 데이터 화면에서 "새로 시작"하거나 데이터 파일을 열어 주세요.');
+  if(j.kind==='reportCard'){
+    const v=validateExtraction(j.payload);
+    if(v.errors.length)return fail('성적표 결과의 형식이 맞지 않아요: '+v.errors[0]);
+    if(!st.imp)st.imp=newImp();
+    applyExtraction(j.payload);
+    st.imp.msg='AI가 읽은 값이에요. 성적표 사진과 비교해 고친 뒤 검산해 주세요.'+(v.warns.length?' ('+v.warns[0]+')':'');st.imp.ok=true;st.imp.checkMsgs=[];
+    st.role='S';st.tab='record';return win('성적표 결과를 표에 채워 놨어요.');
+  }
+  if(j.kind==='schedule'){
+    const errs=[],warns=[];
+    LENIENT=true;try{walk({k:'obj',req:['events'],f:{events:EVENTS_NODE}},j.payload,'payload',(p,m)=>errs.push(p+': '+m),m=>warns.push(m))}finally{LENIENT=false}
+    if(errs.length)return fail('일정 결과의 형식이 맞지 않아요: '+errs[0]);
+    let add=0,skip=0;
+    for(const e of j.payload.events){
+      if(!isDate(e.date)||(e.endDate!=null&&(!isDate(e.endDate)||e.endDate<e.date))){skip++;continue}
+      if(SCHEDULE.some(x=>x.date===e.date&&x.title===e.title)){skip++;continue}
+      const o={date:e.date,title:e.title,category:e.category,confirmed:false};if(e.endDate)o.endDate=e.endDate;SCHEDULE.push(o);add++;
+    }
+    if(add)dirty=true;
+    st.role='S';st.tab='home';return win(`일정 ${add}개를 추가했어요${skip?` (${skip}개는 건너뛰었어요)`:''}. 오늘 화면에서 확인하고, 사람 이름이 들어간 일정은 삭제해 주세요.`);
+  }
+  if(j.kind==='examJudgement'){
+    const p=j.payload,errs=[];
+    walk(SCHEMA.f.examAnalyses.of,p,'payload',(pp,m)=>errs.push(pp+': '+m),()=>{});
+    if(!errs.length){
+      const nos=new Set();p.questions.forEach(q=>{if(nos.has(q.no))errs.push('문항 번호 '+q.no+'가 중복돼요');nos.add(q.no)});
+      (p.tasks||[]).forEach(t=>{if(t.q!==0&&!nos.has(t.q))errs.push('과제의 문항 번호 '+t.q+'가 없어요')});
+    }
+    if(errs.length)return fail('시험지 판정 결과의 형식이 맞지 않아요: '+errs[0]);
+    let n=EXAMS.length+1;while(EXAMS.some(x=>x.id==='e'+n))n++;p.id='e'+n;
+    DATA.examAnalyses=(DATA.examAnalyses||[]).concat([p]);EXAMS=DATA.examAnalyses;dirty=true;
+    st.ex.view='sample';st.ex.i=EXAMS.length-1;st.ex.official={};st.ex.mine={};st.ex.done={};
+    st.role='S';st.tab='wrong';return win('시험지 판정 결과를 가져왔어요.');
+  }
+  return fail('알 수 없는 종류예요. reportCard, schedule, examJudgement 중 하나여야 해요.');
+}
+function readHashLink(){
+  const h=location.hash||'';if(!h.startsWith('#ai='))return;
+  try{
+    let s=h.slice(4).replace(/-/g,'+').replace(/_/g,'/');s+='='.repeat((4-s.length%4)%4);
+    st.aiText=new TextDecoder().decode(b64d(s));st.aiMsg='링크로 받은 결과를 붙여넣기 칸에 넣었어요. 데이터를 연 뒤 "가져오기"를 눌러 주세요.';st.aiOk=true;
+  }catch(e){st.aiMsg='링크의 결과를 읽지 못했어요.';st.aiOk=false}
+  try{history.replaceState(null,'',location.pathname+location.search)}catch(e){}
+}
+/* 암호화: 비밀번호로 AES-256-GCM(PBKDF2-SHA256). 비밀번호는 이 화면에서만 입력해요. */
+const ENC_FORMAT='school-coach-encrypted';
+const b64e=u8=>{let s='';u8.forEach(b=>s+=String.fromCharCode(b));return btoa(s)};
+const b64d=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
+async function deriveKey(pass,salt,iter){
+  const km=await crypto.subtle.importKey('raw',new TextEncoder().encode(pass),'PBKDF2',false,['deriveKey']);
+  return crypto.subtle.deriveKey({name:'PBKDF2',salt,iterations:iter,hash:'SHA-256'},km,{name:'AES-GCM',length:256},false,['encrypt','decrypt']);
+}
+async function encryptObj(obj,pass){
+  const salt=crypto.getRandomValues(new Uint8Array(16)),iv=crypto.getRandomValues(new Uint8Array(12)),iter=310000;
+  const key=await deriveKey(pass,salt,iter);
+  const ct=new Uint8Array(await crypto.subtle.encrypt({name:'AES-GCM',iv},key,new TextEncoder().encode(JSON.stringify(obj))));
+  return {format:ENC_FORMAT,v:1,kdf:'PBKDF2-SHA256',iter,cipher:'AES-256-GCM',salt:b64e(salt),iv:b64e(iv),data:b64e(ct)};
+}
+async function decryptEnv(env,pass){
+  if(!env||env.v!==1||!Number.isInteger(env.iter)||env.iter<100000||env.iter>2000000||typeof env.salt!=='string'||typeof env.iv!=='string'||typeof env.data!=='string')throw new Error('bad');
+  const key=await deriveKey(pass,b64d(env.salt),env.iter);
+  const pt=await crypto.subtle.decrypt({name:'AES-GCM',iv:b64d(env.iv)},key,b64d(env.data));
+  return new TextDecoder().decode(pt);
+}
+function encUI(){
+  const E=st.enc;if(!E)return '';
+  const msg=`<p id="enc-msg" class="down" role="status" style="font-size:13.5px">${esc(E.msg||'')}</p>`;
+  if(E.mode==='save')return `<div class="card"><b>비밀번호로 암호화해서 받기</b><p class="sub">비밀번호는 이 화면에서만 입력하세요. Claude 대화창에는 입력하지 마세요. 잃어버리면 복구할 수 없어요(8자 이상).</p>
+   <label class="lb">비밀번호<input id="enc-p1" class="in" type="password" autocomplete="new-password"></label>
+   <label class="lb">비밀번호 확인<input id="enc-p2" class="in" type="password" autocomplete="new-password"></label>
+   <div class="btns"><button class="btn main" data-enc="do">암호화 파일 받기</button><button class="btn" data-enc="cancel">취소</button></div>${msg}</div>`;
+  return `<div class="card"><b>암호화된 파일이에요</b><p class="sub">${esc(E.name)}</p>
+   <label class="lb">비밀번호<input id="enc-p" class="in" type="password" autocomplete="current-password"></label>
+   <div class="btns"><button class="btn main" data-enc="open">열기</button><button class="btn" data-enc="cancel">취소</button></div>${msg}</div>`;
+}
+async function encAction(a){
+  const E=st.enc;
+  if(a==='cancel'){st.enc=null;return render()}
+  if(!E)return;
+  const say=m=>{E.msg=m;const el=$('enc-msg');if(el)el.textContent=m};
+  if(!(globalThis.crypto&&crypto.subtle))return say('이 환경에서는 암호화를 쓸 수 없어요. HTTPS 주소에서 열어 주세요.');
+  try{
+    if(a==='do'){
+      const p1=$('enc-p1').value,p2=$('enc-p2').value;
+      if(p1.length<8)return say('비밀번호는 8자 이상으로 정해 주세요.');
+      if(p1!==p2)return say('비밀번호 확인이 달라요.');
+      const d=toData(),v=validate(d);
+      if(v.errors.length){st.enc=null;st.data.result={name:'암호화 전 검사',errors:v.errors,warns:v.warns};return render()}
+      const env=await encryptObj(d,p1);
+      $('enc-p1').value='';$('enc-p2').value='';
+      download(`coach-data-${META.dataset||'data'}.enc.json`,env);dirty=false;st.enc=null;render();
+    }else if(a==='open'){
+      const p=$('enc-p').value;let plain;
+      try{plain=await decryptEnv(E.env,p)}catch(e){return say('비밀번호가 맞지 않거나 파일이 손상됐어요.')}
+      $('enc-p').value='';st.enc=null;ingest(plain,String(E.name).replace(/\.enc(\.json)?$/,'')+'.json',plain.length);
+    }
+  }catch(e){say('처리하지 못했어요.')}
+}
+
+/* ===== 9. 설계 노트(큰 화면에서만 보여요) ===== */
+const NOTES={
+ S_home:['학생 · 오늘','성적표 숫자를 그대로 보여주되, 바로 아래 빨간펜 한마디가 "무엇이 달라졌는지"를 말해줘요. 같은 시험에 응시한 과목만 골라 평균을 비교해 과목 수 차이로 생기는 착시를 막았어요.',['입력: 과목별 총점','계산: 직전 응시 대비 증감']],
+ S_trend:['학생 · 추세','시험을 쌓을수록 가치가 커지는 화면이에요. 과목을 하나씩 보거나 겹쳐 비교할 수 있어요.',['입력: 시험 회차별 과목 총점','시험이 늘면 그래프가 옆으로 늘어나요']],
+ S_analysis:['학생 · 분석','객관식과 서술형 득점의 증감을 비교해 "실력이 떨어졌나, 문항 실수인가"를 가늠해요.',['한계: 배점이 시험마다 달라 절대 비교는 어려워요','필요: 문항별 정오표와 성취기준 매핑']],
+ S_goal:['학생 · 목표','학생이 목표 점수를 정하면 학습 횟수가 계산돼요. 학부모에게 무엇을 보여줄지도 학생이 정해요.',['학생 동의 기반 공유 설정']],
+ S_wrong:['학생 · 시험지 분석','시험지, 답안지, 정답지를 따로 올려요. 서비스에서는 AI가 세 파일을 대조해 정오를 판정하고, 이 프로토타입은 사진을 보며 직접 입력해 같은 분석을 해요.',['AI의 읽기와 임시 정답은 틀릴 수 있어 학생이 확인해요','사진은 저장하거나 보내지 않아요']],
+ S_record:['학생 · 성적표 가져오기','성적표 사진을 올리면 읽기(파서)가 값을 채우고, 학생은 사진과 비교해 확인해요. 성적표에 인쇄된 총점·합계·평균으로 읽기 오류를 검산하고, 통과한 값만 데이터에 들어가요.',['지금은 직접 입력이 기본이고, 자동 읽기는 config.json으로 연결해요','형식에 없는 항목은 extras에 보관해 다음 형식 개정의 근거가 돼요','문항별 오답 표기는 분석 화면에 쓰여요']],
+ P:['학부모','점수보다 "잘한 점 → 함께 볼 점 → 대화 질문" 순서로 구성했어요. 등수·학급 비교는 넣지 않았고, 학생이 끈 항목은 가려져요.',['공개 범위: 학생 설정을 따름']],
+ T:['교사','누구를 먼저 볼지 알려주고, 면담 제안과 학부모 안내 문구 초안을 만들어줘요. 교사의 판단을 대신하지 않고 시간을 줄여줘요.',['판정 규칙: 한 과목 −10점 이상 또는 3과목 이상 −5점 이하']],
+ D:['데이터','프로그램과 데이터는 분리돼 있어요. 데이터 형식은 프로그램 안의 SCHEMA가 정의하고, 불러올 때마다 형식과 개인정보를 검사해요.',['허용 항목만 받아요(그 밖의 항목은 거부)','가명 코드·별칭만 허용','저장 없음, 외부 전송 차단']]
+};
+function renderNotes(){
+  const n=st.role==='S'?NOTES['S_'+st.tab]:NOTES[st.role];if(!n)return;
+  $('notes').innerHTML=`<h3>${n[0]}</h3><p>${n[1]}</p><hr><ul>${n[2].map(x=>`<li>${x}</li>`).join('')}</ul><hr><p class="k">이 프로그램에는 데이터가 들어 있지 않아요. 이름·학교·학번은 받지 않아요.</p>`;
+}
+const TABS=[['home','오늘'],['trend','추세'],['analysis','분석'],['goal','목표'],['wrong','오답'],['record','성적표']];
+function render(){
+  document.querySelectorAll('[data-role]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.role===st.role));
+  $('ttl').textContent=DATA&&META.school?META.school+' 학습 코치':'학습 코치';
+  $('ver').textContent='v'+APP_VERSION;
+  let html,tabs=false;
+  if(st.role==='D'||!DATA)html=dataView();
+  else if(!KEYS.length){
+    if(st.role==='S'){tabs=true;if(st.tab!=='record'&&st.tab!=='wrong')st.tab='record';html=st.tab==='wrong'?exView():sRecord()}
+    else html='<h1>시험 기록이 없어요</h1><div class="pen blue"><b>먼저 시험 결과를 입력해 주세요</b><br>학생 화면의 "기록" 탭에서 입력할 수 있어요.</div>';
+  }
+  else if(st.role==='S'){tabs=true;html=({home:sHome,trend:sTrend,analysis:sAnalysis,goal:sGoal,wrong:exView,record:sRecord}[st.tab])()}
+  else html=st.role==='P'?pView():tView();
+  $('tabs').style.display=tabs?'flex':'none';
+  $('tabs').innerHTML=TABS.map(([k,l])=>`<button role="tab" data-tab="${k}" aria-selected="${st.tab===k}">${l}</button>`).join('');
+  $('view').innerHTML=html;
+  renderNotes();
+}
+
+/* ===== 10. 동작 ===== */
+const SAFE_FILE=/^[A-Za-z0-9][A-Za-z0-9._-]{0,60}\.json$/;
+function startNew(){
+  applyData({format:FORMAT,schemaVersion:VERSION,meta:{dataset:'new-data',synthetic:false},school:{alias:'A학교'},student:{pid:'S001',alias:'학생 A',grade:3},
+    exams:[],subjects:[{id:'kor',name:'국어',type:'lang'},{id:'math',name:'수학',type:'math'},{id:'eng',name:'영어',type:'lang'},{id:'sci',name:'과학',type:'sci'}],results:[]});
+  dirty=false;st.role='S';st.tab='record';st.data.result=null;render();
+}
+/* 파일 문자열을 형식 검사 후 불러와요. 폴더에서 열든 직접 고르든 같은 경로를 써요. */
+function ingest(text,name,size){
+  const r={name:String(name).replace(/[<>]/g,''),errors:[],warns:[]};
+  if(size>3*1024*1024)r.errors.push('파일이 너무 커요(3MB 이하만 받아요)');
+  else{
+    let d;try{d=JSON.parse(text)}catch(e){r.errors.push('JSON 형식이 아니에요. 파일 내용을 확인해 주세요.')}
+    if(d&&typeof d==='object'&&d.format===ENC_FORMAT){st.enc={mode:'load',env:d,name:r.name,msg:''};st.data.result=null;st.role='D';return render()}
+    if(d!==undefined){
+      const v0=d&&typeof d==='object'?d.schemaVersion:null;
+      if(Number.isInteger(v0)&&v0>VERSION)r.errors.push(`더 새로운 형식(v${v0})의 파일이에요. 프로그램을 업데이트해 주세요(지금 v${VERSION}).`);
+      else{
+        d=migrate(d);const v=validate(d);r.errors=v.errors;r.warns=v.warns;
+        if(!v.errors.length){
+          if(Number.isInteger(v0)&&v0<VERSION)r.warns.unshift(`이전 형식(v${v0}) 파일이라 최신 형식(v${VERSION})으로 바꿔서 불러왔어요`);
+          applyData(d);dirty=Number.isInteger(v0)&&v0<VERSION;st.role='D';
+        }
+      }
+    }
+  }
+  st.data.result=r;render();
+}
+async function loadFile(f){ingest(await f.text(),f.name,f.size)}
+async function openDataset(file){
+  if(!SAFE_FILE.test(file))return;
+  try{const r=await fetch('data/'+file,{cache:'no-store'});if(!r.ok)throw new Error();const t=await r.text();ingest(t,file,t.length)}
+  catch(e){st.data.result={name:file,errors:['파일을 열지 못했어요. data 폴더에 파일이 있는지 확인해 주세요.'],warns:[]};render()}
+}
+function applyConfig(c){
+  const p=c&&c.parser;if(!p||typeof p!=='object')return;
+  if(p.mode==='remote'&&typeof p.endpoint==='string'&&/^(https:\/\/|\.?\/)[^\s]{1,300}$/.test(p.endpoint)){CONFIG.parser={mode:'remote',endpoint:p.endpoint}}
+}
+async function boot(){
+  readHashLink();
+  try{const r=await fetch('config.json',{cache:'no-store'});if(r.ok)applyConfig(await r.json())}catch(e){}
+  try{
+    const r=await fetch('data/index.json',{cache:'no-store'});if(!r.ok)throw new Error();
+    const ix=await r.json();
+    INDEX=(ix&&Array.isArray(ix.datasets)?ix.datasets:[]).filter(x=>x&&typeof x.file==='string'&&SAFE_FILE.test(x.file)).slice(0,50).map(x=>({file:x.file,title:String(x.title||x.file).slice(0,40)}));
+  }catch(e){INDEX=null}
+  render();
+}
+function exportData(){
+  const d=toData(),v=validate(d);
+  if(v.errors.length){st.data.result={name:'내보내기 전 검사',errors:v.errors,warns:v.warns};st.role='D';return render()}
+  download(`coach-data-${META.dataset||'data'}.json`,d);dirty=false;
+}
+/* 스키마 개정 근거: 값은 빼고 항목 이름·값의 종류·개수만 담아요 */
+function extrasReport(){
+  const all=EXTRAS.concat(st.imp?st.imp.extras:[]),m={};
+  all.forEach(x=>{const t=/^-?\d+(\.\d+)?$/.test(String(x.value))?'number':'text';const k=x.label+'|'+t;m[k]=m[k]||{label:x.label,valueType:t,count:0};m[k].count++});
+  return {kind:'schema-suggestion',appVersion:APP_VERSION,schemaVersion:VERSION,createdAt:isoToday(),fields:Object.values(m)};
+}
+
+document.addEventListener('click',e=>{
+  const t=e.target.closest('[data-role],[data-tab],[data-subj],[data-task],[data-go],[data-pick],[data-share],[data-copy],[data-sel],[data-selall],[data-avg],[data-multi],[data-del],[data-d],[data-ex],[data-ex-task],[data-ex-task2],[data-ex-rm],[data-imp-act],[data-ai],[data-enc],[data-sch],[data-reload]');
+  if(!t)return;
+  const d=t.dataset,E=st.ex;
+  if(d.reload!==undefined)return location.reload();
+  if(d.enc){encAction(d.enc);return}
+  if(d.ai){
+    if(d.ai==='go'){const el=$('ai-text');if(el)st.aiText=el.value;return handleAI(st.aiText)}
+    if(d.ai==='paste'){
+      if(navigator.clipboard&&navigator.clipboard.readText)navigator.clipboard.readText().then(x=>{st.aiText=x;st.aiMsg='';render()}).catch(()=>{st.aiMsg='클립보드를 읽지 못했어요. 칸을 길게 눌러 직접 붙여 넣어 주세요.';st.aiOk=false;render()});
+      else{st.aiMsg='클립보드를 읽을 수 없어요. 칸을 길게 눌러 직접 붙여 넣어 주세요.';st.aiOk=false;render()}
+      return;
+    }
+  }
+  if(d.sch!==undefined){const [a,i]=d.sch.split(':'),e=SCHEDULE[+i];if(e){if(a==='ok')e.confirmed=true;else if(a==='del')SCHEDULE.splice(+i,1);dirty=true}return render()}
+  if(d.del!==undefined)return delExam(+d.del);
+  if(d.impAct){
+    const I=st.imp||(st.imp=newImp()),[a,arg]=d.impAct.split(':');
+    if(a==='rmfile'){const f=I.files.splice(+arg,1)[0];if(f&&f.url)URL.revokeObjectURL(f.url)}
+    else if(a==='addrow'){
+      const nm=I.newName.trim();
+      if(!nm){I.msg='과목 이름을 입력해 주세요.';I.ok=false}
+      else if(piiHit(nm)){I.msg=`${piiHit(nm)}처럼 보이는 글은 쓸 수 없어요.`;I.ok=false}
+      else if(I.rows.some(r=>r.name===nm)){I.msg='같은 이름의 과목이 이미 있어요.';I.ok=false}
+      else{I.rows.push({k:null,name:nm,code:'',type:I.newType,obj:'',wri:'',perf:'',total:'',count:'',wrong:''});I.newName='';I.msg='';}
+    }
+    else if(a==='rmrow')I.rows.splice(+arg,1);
+    else if(a==='check'){const c=checkImp();I.checkMsgs=c.bad;I.msg=c.bad.length?'':(c.cnt?'검산을 통과했어요. 입력한 값이 성적표와 일치해요.':'입력된 과목이 없어요.');I.ok=!c.bad.length&&c.cnt>0;I.confirm=false}
+    else if(a==='commit')return commitImp();
+    else if(a==='parse')return remoteParse();
+    else if(a==='reset'){revokeFiles(I.files);st.imp=newImp()}
+    return render();
+  }
+  if(d.d){
+    if(d.d==='template')download('template-empty.json',templateData());
+    else if(d.d==='new')return startNew();
+    else if(d.d==='export')return exportData();
+    else if(d.d==='extras')download('schema-suggestion.json',extrasReport());
+    else if(d.d==='open')return openDataset(d.file||'');
+    else if(d.d==='encsave'){st.enc={mode:'save',msg:''}}
+    else if(d.d==='clear'){clearAll()}
+  }
+  else if(d.role){st.role=d.role===st.role&&d.role==='D'?'S':d.role;st.pick=0}
+  else if(d.tab){st.tab=d.tab;st.del=-1}
+  else if(d.subj)st.subj=d.subj;
+  else if(d.go){st.subj=d.go;st.tab='analysis'}
+  else if(d.task){done.has(d.task)?done.delete(d.task):done.add(d.task)}
+  else if(d.pick!==undefined)st.pick=+d.pick;
+  else if(d.share){share[d.share]=!share[d.share]}
+  else if(d.sel){
+    if(!st.multi)st.sel=[d.sel];
+    else{const n=st.sel.includes(d.sel)?st.sel.filter(x=>x!==d.sel):[...st.sel,d.sel];st.sel=n.length?n:st.sel}
+  }
+  else if(d.selall){st.multi=true;st.sel=[...KEYS]}
+  else if(d.multi){st.multi=!st.multi;if(!st.multi)st.sel=[st.sel[0]||KEYS[0]]}
+  else if(d.avg)st.avg=!st.avg;
+  else if(d.copy){const el=$('draft');if(el&&navigator.clipboard)navigator.clipboard.writeText(el.textContent).catch(()=>{});t.textContent='복사했어요';return}
+  else if(d.exTask!==undefined){const i=d.exTask;E.done[i]=!E.done[i]}
+  else if(d.exTask2!==undefined){const i=d.exTask2;E.done2[i]=!E.done2[i]}
+  else if(d.exRm!==undefined){const [k,i]=d.exRm.split(':');const f=E.files[k].splice(+i,1)[0];if(f&&f.url)URL.revokeObjectURL(f.url)}
+  else if(d.ex==='open'){E.view='sample';E.i=+(d.exI||0)}
+  else if(d.ex==='close'){E.view='home';E.msg=''}
+  else if(d.ex==='start'){
+    if(!(E.files.exam.length&&E.files.ans.length))E.msg='시험지와 답안지를 먼저 올려 주세요.';
+    else{E.msg='';E.view='entry'}
+  }
+  else if(d.ex==='toresult'){E.done2={};E.view='result'}
+  else if(d.ex==='back'){E.view='entry'}
+  else if(d.ex==='regroup'){E.done2={}}
+  else if(d.ex==='reset'){E.official={};E.mine={};E.done={}}
+  render();
+});
+document.addEventListener('change',e=>{
+  const t=e.target,E=st.ex;
+  if(t.id==='f-data'){const f=t.files&&t.files[0];t.value='';if(f)loadFile(f);return}
+  if(t.id==='imp-file'||t.id==='imp-cam'){
+    const I=st.imp||(st.imp=newImp());
+    [...t.files].forEach(f=>I.files.push({name:f.name,pdf:f.type==='application/pdf',url:URL.createObjectURL(f),file:f}));
+    t.value='';render();return;
+  }
+  if(t.id&&t.id.startsWith('u-')&&t.files){
+    const k=t.id.slice(2).replace('-cam','');
+    [...t.files].forEach(f=>E.files[k].push({name:f.name,pdf:f.type==='application/pdf',url:URL.createObjectURL(f)}));
+    t.value='';E.msg='';render();return;
+  }
+  if(t.id==='ex-n'){const n=Math.max(1,Math.min(60,+t.value||20));E.n=n;E.rows=mkRows(n,E.rows);render();return}
+  if(!t.dataset)return;
+  if(t.dataset.imp&&st.imp){
+    const I=st.imp,p=t.dataset.imp.split(':');
+    if(p[0]==='r'){I.rows[+p[1]][p[2]]=t.value}
+    else if(p[0]==='exam.label')I.exam.label=t.value;
+    else if(p[0]==='exam.gradeLevel')I.exam.gradeLevel=t.value;
+    else if(p[0]==='exam.semester')I.exam.semester=t.value;
+    else if(p[0]==='exam.kind')I.exam.kind=t.value;
+    else if(p[0]==='rep.sum')I.reported.sum=t.value;
+    else if(p[0]==='rep.avg')I.reported.avg=t.value;
+    else if(p[0]==='newName')I.newName=t.value;
+    else if(p[0]==='newType')I.newType=t.value;
+    I.confirm=false;return;
+  }
+  if(t.dataset.exr!==undefined){
+    const [i,f]=t.dataset.exr.split(':'),r=E.rows[+i];
+    if(f==='unit'&&piiHit(t.value)){t.value='';return}
+    r[f]=(f==='mine'||f==='key')?(t.value?+t.value:null):t.value;return;
+  }
+  if(t.dataset.exMine!==undefined){E.mine[t.dataset.exMine]=t.value?+t.value:null;render()}
+  else if(t.dataset.exOff!==undefined){if(t.value)E.official[t.dataset.exOff]=+t.value;else delete E.official[t.dataset.exOff];render()}
+});
+document.addEventListener('input',e=>{
+  const t=e.target;
+  if(t.id==='ai-text'){st.aiText=t.value;return}
+  if(t.dataset&&t.dataset.goal){goals[t.dataset.goal]=+t.value;const v=$('view').scrollTop;render();$('view').scrollTop=v;const el=document.querySelector(`[data-goal="${t.dataset.goal}"]`);el&&el.focus()}
+});
+document.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.dataset&&e.target.dataset.pick!==undefined)e.target.click()});
+window.addEventListener('beforeunload',e=>{if(dirty){e.preventDefault();e.returnValue=''}});
+window.addEventListener('pagehide',()=>{for(const k of Object.keys(st.ex.files))st.ex.files[k].forEach(f=>f.url&&URL.revokeObjectURL(f.url));if(st.imp)st.imp.files.forEach(f=>f.url&&URL.revokeObjectURL(f.url))});
+
+/* 시작: 데이터 없이 시작하고, 같은 위치의 config.json·data/index.json만 읽어요. */
+st.role='D';
+render();
+boot();
+if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost')){
+  const hadCtrl=!!navigator.serviceWorker.controller;
+  navigator.serviceWorker.addEventListener('controllerchange',()=>{if(hadCtrl&&$('upd'))$('upd').hidden=false});
+  navigator.serviceWorker.register('sw.js').catch(()=>{});
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,9 @@
+# 사용자 데이터는 절대 올리지 않아요
+data/*
+!data/index.json
+!data/template-empty.json
+*.enc.json
+coach-data-*.json
+schema-suggestion.json
+*.zip
+.DS_Store
