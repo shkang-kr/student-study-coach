@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-gvIh1Onc5YA90H0fC531W+dO8Ug51GpCzeRk83dzuh8='; style-src 'unsafe-inline'; img-src 'self' blob: data:; manifest-src 'self'; worker-src 'self'; connect-src 'self'; form-action 'none'; base-uri 'none'; frame-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-0H8Z74VG4D9jBZ6I5CLkh8w1AM1NWDd+NiP90J1itbw='; style-src 'unsafe-inline'; img-src 'self' blob: data:; manifest-src 'self'; worker-src 'self'; connect-src 'self'; form-action 'none'; base-uri 'none'; frame-src 'none'">
 <meta name="theme-color" content="#FFE15A">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -190,7 +190,7 @@ textarea.in{resize:vertical;font-size:14px}
    - 데이터는 별도 JSON 파일로만 불러와요(형식은 아래 SCHEMA가 정의해요).
    - 브라우저 저장소·쿠키를 쓰지 않고, 같은 위치의 파일만 읽어요(CSP로 외부 연결 차단).
    ===================================================================== */
-const FORMAT='school-coach-data',VERSION=3,APP_VERSION='3.0.1';
+const FORMAT='school-coach-data',VERSION=3,APP_VERSION='3.0.2';
 /* 데이터 형식(스키마) 변경 기록. 새 성적표에서 중요한 항목이 발견되면 여기에 버전을 추가하고 SCHEMA와 MIGRATIONS를 함께 고쳐요. */
 const SCHEMA_HISTORY=[
  {v:1,app:'1.0.0',date:'2026-11-08',changes:['최초 형식: 시험·과목·점수(객관식/서술형), 학급 비교, 시험지 분석 예시']},
@@ -844,7 +844,10 @@ function sRecord(){
    <div class="btns"><label for="imp-file" class="btn main">${I.files.length?'더 올리기':'성적표 올리기'}</label><label for="imp-cam" class="btn">촬영</label>
    ${remote?`<button class="btn" data-imp-act="parse" aria-disabled="${I.busy}">자동 읽기</button>`:''}</div>
    ${thumbs}
-   <p class="sub" style="margin-top:8px">${remote?'자동 읽기를 누르면 사진이 설정된 읽기 서버로 전송돼요. 이름이 보이면 가려서 올려 주세요.':'자동 읽기는 연결되어 있지 않아요. 사진을 보면서 아래 표를 채워 주세요. 이름·학번은 입력하지 않아요.'}</p></div>
+   ${remote?`<p class="sub" style="margin-top:8px">자동 읽기를 누르면 사진이 설정된 읽기 서버로 전송돼요. 이름이 보이면 가려서 올려 주세요.</p>`
+   :`<div class="pen blue"><b>이 앱은 사진을 직접 읽지 못해요</b><br>올린 사진은 아래 표를 채울 때 옆에 두고 보는 용도예요. 값을 자동으로 읽으려면 Claude 앱에 <b>이름을 가린 사진</b>과 아래 요청문을 함께 보내고, 받은 결과를 위의 "AI 결과 가져오기"에 붙여 넣으세요.</div>
+   <div class="btns"><button class="btn small" data-ai="prompt">Claude용 요청문 복사</button></div>
+   <details class="dt"><summary>요청문 보기</summary><textarea class="in" rows="8" readonly aria-label="Claude에게 보낼 요청문">${esc(CLAUDE_PROMPT)}</textarea></details>`}</div>
   ${viewer}
   <div class="card"><b>시험 정보</b>
    <label class="lb">시험 이름<input class="in" data-imp="exam.label" value="${esc(e.label)}" maxlength="16" placeholder="예: 3-2 기말"></label>
@@ -1169,6 +1172,7 @@ function readHashLink(){
 }
 /* 암호화: 비밀번호로 AES-256-GCM(PBKDF2-SHA256). 비밀번호는 이 화면에서만 입력해요. */
 const ENC_FORMAT='school-coach-encrypted';
+const CLAUDE_PROMPT="아래 규칙으로 첨부한 성적표 사진을 읽어서 JSON만 출력해 주세요.\n1. 사진에 이름·학번·학교 이름·반·번호가 보이면 작업을 멈추고, 가려서 다시 올려 달라고 말해 주세요. 결과에도 그런 정보를 쓰지 마세요.\n2. 출력은 코드 블록 하나의 JSON만, 형식은 다음과 같아요.\n{\"kind\":\"reportCard\",\"schemaVersion\":3,\"payload\":{\"exam\":{\"label\":\"시험 이름\",\"gradeLevel\":3,\"semester\":2,\"kind\":\"midterm\"},\"subjects\":[{\"name\":\"국어\",\"code\":\"01\",\"objective\":76,\"written\":20,\"performance\":0,\"reportedTotal\":96,\"itemCount\":45,\"wrong\":[{\"n\":6,\"chosen\":[2]}],\"blank\":[]}],\"reported\":{\"sum\":657,\"average\":93.86},\"extras\":[]}}\n   kind는 midterm(중간)·final(기말)·quiz(단원평가)·mock(모의고사)·other 중 하나예요. 학기·학년을 모르면 생략하세요.\n3. 객관식은 objective, 주관식·서술형은 written, 실기는 performance(없으면 생략), 성적표의 과목 총점은 reportedTotal, 합계·평균은 reported에 넣어 주세요.\n4. 문항 표에서 점(.)은 맞음, 숫자는 틀린 문항에서 고른 보기, ?는 비운 문항이에요. 알파벳은 복수 표기예요: A=12, B=13, C=23, D=123, E=14, F=24, G=124, H=34, I=134, J=234, K=1234, L=15, M=25, N=125, O=35, P=135, Q=235, R=1235, S=45, T=145, U=245, V=1245, W=345, X=1345, Y=2345, Z=12345. 확신이 없으면 문항 표는 빼고 점수만 주세요.\n5. 과목마다 객관식+서술형+실기가 과목 총점과 같은지, 총점의 합이 합계와 같은지, 평균이 맞는지 스스로 검산하세요. 안 맞으면 사진을 다시 읽어 고치세요.\n6. 위 형식에 없는 항목이 성적표에 있으면 extras에 {\"label\":\"항목 이름\",\"value\":\"값\"}으로 넣어 주세요(이름·학번 제외).\n7. 읽기 어려운 칸은 비워 두고, JSON 아래에 불확실한 곳을 짧게 적어 주세요.";
 const b64e=u8=>{let s='';u8.forEach(b=>s+=String.fromCharCode(b));return btoa(s)};
 const b64d=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
 async function deriveKey(pass,salt,iter){
@@ -1324,6 +1328,11 @@ document.addEventListener('click',e=>{
   if(d.reload!==undefined)return location.reload();
   if(d.enc){encAction(d.enc);return}
   if(d.ai){
+    if(d.ai==='prompt'){
+      const fin=ok=>{st.aiMsg=ok?'요청문을 복사했어요. Claude 앱에 붙여 넣고, 이름을 가린 성적표 사진을 함께 올리세요. 받은 결과는 "AI 결과 가져오기"에 붙여 넣으세요.':'복사하지 못했어요. "요청문 보기"를 열어 직접 복사해 주세요.';st.aiOk=ok;render()};
+      if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(CLAUDE_PROMPT).then(()=>fin(true)).catch(()=>fin(false));else fin(false);
+      return;
+    }
     if(d.ai==='go'){const el=$('ai-text');if(el)st.aiText=el.value;return handleAI(st.aiText)}
     if(d.ai==='paste'){
       if(navigator.clipboard&&navigator.clipboard.readText)navigator.clipboard.readText().then(x=>{st.aiText=x;st.aiMsg='';render()}).catch(()=>{st.aiMsg='클립보드를 읽지 못했어요. 칸을 길게 눌러 직접 붙여 넣어 주세요.';st.aiOk=false;render()});
